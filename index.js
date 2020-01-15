@@ -15,6 +15,8 @@ const ROTATION_DIR_LEFT  = 1;
 const ROTATION_DIR_RIGHT = 2;
 
 let gGamePadIndexArray = new Array();
+let gCurrentGamePadIndices = [ undefined, undefined ];
+
 let gGamePadIndex = undefined;
 let gArrowAngle = undefined;    // ArrowAngle for omni-direction move
 
@@ -30,6 +32,7 @@ if ( window.GamepadEvent ) {
     // console.log( event.gamepad );
     gGamePadIndexArray.push( event.gamepad.index );
     // gGamePadIndex = gGamePadIndexArray[0];
+    console.log( gGamePadIndexArray );
   });
 
   window.addEventListener( "gamepaddisconnected", ( event ) => {
@@ -91,7 +94,7 @@ const InputKeyValue = ( keyCode, value ) => {
 
 }
 
-let gPreviousHomeButton = 0;
+let gPreviousHomeButton = [ undefined, undefined ];
 const selectGamePad = () => {
 
     const GAMEPAD_BT_HOME = 16;
@@ -101,19 +104,19 @@ const selectGamePad = () => {
         gamePad = navigator.getGamepads()[ item ];
         if( gamePad !== undefined ){
             let currentButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
-            if( currentButtonStatus !== gPreviousHomeButton ){
+            if( currentButtonStatus !== gPreviousHomeButton[ item ] ){
                 if( currentButtonStatus === 1 ){
-                    if( item === 0 ){
+                    if( item === gCurrentGamePadIndices[0] ){
                         // exchange 0 to 1
-                        [ gGamePadIndexArray[0], gGamePadIndexArray[1] ] 
-                            = [ gGamePadIndexArray[1], gGamePadIndexArray[0] ];
+                        [ gCurrentGamePadIndices[0], gCurrentGamePadIndices[1] ] 
+                            = [ gCurrentGamePadIndices[1], gCurrentGamePadIndices[0] ];
                     }else{
                         // set this item to 0
-                        let arrTemp = gGamePadIndexArray.splice( item );
-                        gGamePadIndexArray.unshift( arrTemp[0] );
+                        gCurrentGamePadIndices[1] = gCurrentGamePadIndices[0];
+                        gCurrentGamePadIndices[0] = item;
                     }
 
-                    console.log( gGamePadIndexArray );
+                    console.log( gCurrentGamePadIndices );
 
                     gGamePadIndex = item;
                     // console.log( "gGamePadIndex: " + gGamePadIndex );
@@ -121,7 +124,7 @@ const selectGamePad = () => {
                 }
 
             }
-            gPreviousHomeButton = currentButtonStatus;
+            gPreviousHomeButton[ item ] = currentButtonStatus;
         }
     }
     
@@ -819,6 +822,7 @@ const drawAnalogLeft = ( context, canvas ) => {
     const OFFSET = 10;
 
     const ctx = context;
+    ctx.save();
     ctx.fillStyle = "rgba( 255, 255, 255, 0.3 )" ;
     ctx.strokeStyle = "rgba( 255, 255, 255, 0.6 )" ;
 
@@ -858,6 +862,8 @@ const drawAnalogLeft = ( context, canvas ) => {
             SQUARE_SIZE, SQUARE_SIZE );
     }
 
+    ctx.restore();
+
 }
 
 // -- Draw the state of right analog stick. ONLY for x-axis
@@ -868,6 +874,8 @@ const drawAnalogRight = ( context, canvas ) => {
     const ctx = context;
     const X_OFFSET = 296;
     const Y_OFFSET = 10;
+
+    ctx.save();
 
     // Rect for rim
     ctx.fillStyle = "rgba( 255, 255, 255, 0.3 )" ;
@@ -906,6 +914,8 @@ const drawAnalogRight = ( context, canvas ) => {
         }
     }
 
+    ctx.restore();
+
 }
 
 // -- Draw connection status panel
@@ -921,13 +931,13 @@ const drawConnectionState = ( context, canvas ) => {
     const ctx = context;
     const CUBE_SIZE = 120;
     let image = cubeImage;
-
-    ctx.save();
+    
     for( let item of [ 0, 1 ] ){
         if( ( gCubes[item] === undefined ) 
             || ( gCubes[item].lightChar === undefined ) 
-                || ( gGamePadIndexArray[item] === undefined ) ){
+                || ( gCurrentGamePadIndices[item] === undefined ) ){
             // Not Ready yet. so this panel is needed.
+            ctx.save();
             ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
             ctx.fillRect( 0, item * canvas.height / 2, canvas.width, canvas.height / 2 );
 
@@ -948,16 +958,15 @@ const drawConnectionState = ( context, canvas ) => {
             ctx.drawImage( image, canvas.width/3 - CUBE_SIZE/2, ( 2 * item + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
 
             // For game pad status
-            if( gGamePadIndexArray[item] !== undefined ){
+            if( gCurrentGamePadIndices[item] !== undefined ){
                 ctx.globalAlpha = 1.0;
             }else{
                 ctx.globalAlpha = 0.3;
             }
             ctx.drawImage( controllerImage, canvas.width/3 + CUBE_SIZE/2, ( 2 * item + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
-
+            ctx.restore();
         }
     }
-    ctx.restore();
 
 } 
 
