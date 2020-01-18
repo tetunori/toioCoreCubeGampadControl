@@ -105,22 +105,35 @@ const selectGamePad = () => {
         if( gamePad !== undefined ){
             let currentButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
             if( currentButtonStatus !== gPreviousHomeButton[ item ] ){
-                if( currentButtonStatus === 1 ){
-                    if( item === gCurrentGamePadIndices[0] ){
+                if( ( currentButtonStatus === 1 ) && ( gPreviousHomeButton[ item ] === 0 ) ){
+
+                    if( gCurrentGamePadIndices.indexOf( item ) !== -1 ){
+                        // item is aleady in this array.
                         // exchange 0 to 1
                         [ gCurrentGamePadIndices[0], gCurrentGamePadIndices[1] ] 
                             = [ gCurrentGamePadIndices[1], gCurrentGamePadIndices[0] ];
+                    
                     }else{
-                        // set this item to 0
-                        gCurrentGamePadIndices[1] = gCurrentGamePadIndices[0];
-                        gCurrentGamePadIndices[0] = item;
+
+                        // 1st, search for slot.
+                        if( gCurrentGamePadIndices[0] === undefined ){
+                            gCurrentGamePadIndices[0] = item;
+                        }else if( gCurrentGamePadIndices[1] === undefined ){
+                            gCurrentGamePadIndices[1] = item;
+                        }else{
+                            // slots are full.
+                            // set this item to 0
+                            gCurrentGamePadIndices[1] = gCurrentGamePadIndices[0];
+                            gCurrentGamePadIndices[0] = item;
+                        }
+
                     }
 
-                    console.log( gCurrentGamePadIndices );
-
+                    vibrateGamePad( gamePad );
                     gGamePadIndex = item;
+                    // console.log( gamePad );
                     // console.log( "gGamePadIndex: " + gGamePadIndex );
-                    break;
+                    // console.log( gCurrentGamePadIndices );
                 }
 
             }
@@ -128,6 +141,17 @@ const selectGamePad = () => {
         }
     }
     
+}
+
+const vibrateGamePad = ( gamePad ) => {
+
+    if ( gamePad.vibrationActuator ) {
+        gamePad.vibrationActuator.playEffect( "dual-rumble", { 
+            duration: 150, 
+            weakMagnitude: 1.0,
+            strongMagnitude: 1.0 
+        } );
+    }
 
 }
 
@@ -349,21 +373,15 @@ const updateStatus = () => {
 
     drawBackground( ctx, canvas );
 
-    if( gArrowAngle !== undefined ){
-
-
-    }else if( gRotationPoint !== undefined ){
-
-        // Rotation 
-        
-
+    for( let index of [ 0, 1 ] ){
+        /*
+        drawAnalogLeft( index, ctx, canvas );
+        drawAnalogRight( index, ctx, canvas );
+        */
+        // Mainly for before connection
+        drawConnectionState( index, ctx, canvas );
+        drawControllerDescription( index, ctx, canvas );
     }
-
-    drawAnalogLeft( ctx, canvas );
-    drawAnalogRight( ctx, canvas );
-
-    // Mainly for before connection
-    drawConnectionState( ctx, canvas );
 
     window.requestAnimationFrame( updateStatus );
 }
@@ -603,7 +621,17 @@ const minusMaxSpeed = () => {
 const exchangeHeadTailCube = () => {
 
     [ gCubes[0], gCubes[1] ] = [ gCubes[1], gCubes[0] ];
-    lightHeadCube();
+
+    // Turn light on.
+    let cube = gCubes[0];
+    if( ( cube !== undefined ) && ( cube.lightChar !== undefined ) ){
+        turnOnLightCian( cube );
+    }
+
+    cube = gCubes[1];
+    if( ( cube !== undefined ) && ( cube.lightChar !== undefined ) ){
+        turnOnLightGreen( cube );
+    }
 
 }
 
@@ -703,9 +731,9 @@ const connectNewCube = () => {
     }).then( characteristic => {
         cube.lightChar = characteristic;
         if( cube === gCubes[0] ){
-            turnOnLightGreen( cube );
-        }else{
             turnOnLightCian( cube );
+        }else{
+            turnOnLightGreen( cube );
         }
     });
 
@@ -927,48 +955,105 @@ cubeImage.src = "./images/cube.png";
 cubeCheckedImage.src = "./images/cube_checked.png";
 controllerImage.src = "./images/controller.png";
 
-const drawConnectionState = ( context, canvas ) => {
+const drawConnectionState = ( index, context, canvas ) => {
     const ctx = context;
     const CUBE_SIZE = 120;
     let image = cubeImage;
     
-    for( let item of [ 0, 1 ] ){
-        if( ( gCubes[item] === undefined ) 
-            || ( gCubes[item].lightChar === undefined ) 
-                || ( gCurrentGamePadIndices[item] === undefined ) ){
-            // Not Ready yet. so this panel is needed.
-            ctx.save();
-            ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
-            ctx.fillRect( 0, item * canvas.height / 2, canvas.width, canvas.height / 2 );
+    ctx.save();
+    if( !isReady4Control( index ) ){
+        // Not Ready yet. so this panel is needed.
+        
+        ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
+        ctx.fillRect( 0, index * canvas.height / 2, canvas.width, canvas.height / 2 );
 
-            // For Head cube
-            if( ( gCubes[item] !== undefined ) && ( gCubes[item].server !== undefined ) ){
-                // connected & service registered
-                ctx.globalAlpha = 1.0;
-                image = cubeImage;
-                if( gCubes[item].lightChar !== undefined ){
-                    // ready for using.
-                    image = cubeCheckedImage;
-                }
-            }else{
-                // Not connected yet
-                image = cubeImage;
-                ctx.globalAlpha = 0.3;
+        // For Head cube
+        if( ( gCubes[index] !== undefined ) && ( gCubes[index].server !== undefined ) ){
+            // connected & service registered
+            ctx.globalAlpha = 1.0;
+            image = cubeImage;
+            if( gCubes[index].lightChar !== undefined ){
+                // ready for using.
+                image = cubeCheckedImage;
             }
-            ctx.drawImage( image, canvas.width/3 - CUBE_SIZE/2, ( 2 * item + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
+        }else{
+            // Not connected yet
+            image = cubeImage;
+            ctx.globalAlpha = 0.3;
+        }
+        ctx.drawImage( image, canvas.width/3 - CUBE_SIZE/2, ( 2 * index + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
 
-            // For game pad status
-            if( gCurrentGamePadIndices[item] !== undefined ){
-                ctx.globalAlpha = 1.0;
-            }else{
-                ctx.globalAlpha = 0.3;
-            }
-            ctx.drawImage( controllerImage, canvas.width/3 + CUBE_SIZE/2, ( 2 * item + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
-            ctx.restore();
+        // For game pad status
+        if( gCurrentGamePadIndices[index] !== undefined ){
+            ctx.globalAlpha = 1.0;
+        }else{
+            ctx.globalAlpha = 0.3;
+        }
+        ctx.drawImage( controllerImage, canvas.width/3 + CUBE_SIZE/2, ( 2 * index + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
+
+    ctx.restore();
+
+    }
+
+
+} 
+const drawControllerDescription = ( index, context, canvas ) => {
+    const ctx = context;
+    const CUBE_SIZE = 120;
+    ctx.save();
+    
+    // Game pad's description
+    let description = '';
+    let xPosDesc = canvas.width/3 + CUBE_SIZE/2 + 60;
+    if( isReady4Control( index ) ){
+        xPosDesc = canvas.width/2;
+    }
+    let yPosDesc = ( 2 * index + 1 ) * canvas.height/4 - 48;
+
+    if( gCurrentGamePadIndices[index] !== undefined ){
+        description = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ].id;
+        description = replaceSpecialDescription( description );
+        if( description.length > 20 ){
+            description = description.slice( 0, 20 ) + '...';;
         }
     }
 
-} 
+    ctx.font = "17px 'Noto Sans JP'";
+    ctx.textAlign = 'center'
+    ctx.fillStyle = 'rgba(255, 255, 255)';
+    ctx.fillText( description, xPosDesc, yPosDesc );
+
+    ctx.restore();
+
+}
+
+const replaceSpecialDescription = ( description ) => {
+
+    let returnValue = description;
+
+    if( description.indexOf('Joy-Con L+R') != -1 ){
+        returnValue = 'Joy-Con L+R';
+    }else if( description.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 05c4)') != -1 ){
+        returnValue = 'DUALSHOCK 4(1st Gen)';
+    }else if( description.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 09cc)') != -1 ){
+        returnValue = 'DUALSHOCK 4(2nd Gen)';
+    }
+
+    return returnValue;
+
+}
+
+const isReady4Control = ( index ) => {
+
+    if( ( gCubes[ index ] === undefined ) 
+        || ( gCubes[ index ].lightChar === undefined ) 
+            || ( gCurrentGamePadIndices[ index ] === undefined ) ){
+        return false;
+    }else{
+        return true;
+    }
+
+}
 
 // Initialize 
 const initialize = () => {
