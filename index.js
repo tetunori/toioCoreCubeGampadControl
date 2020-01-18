@@ -374,10 +374,10 @@ const updateStatus = () => {
     drawBackground( ctx, canvas );
 
     for( let index of [ 0, 1 ] ){
-        /*
         drawAnalogLeft( index, ctx, canvas );
         drawAnalogRight( index, ctx, canvas );
-        */
+        // drawStatus( index, ctx, canvas );
+        
         // Mainly for before connection
         drawConnectionState( index, ctx, canvas );
         drawControllerDescription( index, ctx, canvas );
@@ -844,7 +844,13 @@ const drawBackground = ( context, canvas ) => {
 }
 
 // -- Draw the state of left analog stick
-const drawAnalogLeft = ( context, canvas ) => {
+const drawAnalogLeft = ( index, context, canvas ) => {
+
+    drawAnalogState( 0, 0, index, context, canvas, true );
+
+}
+
+const drawAnalogState = ( offsetX, offsetY, index, context, canvas, isLeft ) => {
 
     const SQUARE_SIZE = 100;
     const OFFSET = 10;
@@ -855,94 +861,58 @@ const drawAnalogLeft = ( context, canvas ) => {
     ctx.strokeStyle = "rgba( 255, 255, 255, 0.6 )" ;
 
     // Rect for rim
-    ctx.strokeRect( OFFSET, canvas.height - SQUARE_SIZE - OFFSET, 
+    ctx.strokeRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
         SQUARE_SIZE, SQUARE_SIZE );
-    ctx.fillRect( OFFSET, canvas.height - SQUARE_SIZE - OFFSET, 
+    ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
         SQUARE_SIZE, SQUARE_SIZE );
     
     // Circle
     ctx.beginPath();
-    ctx.arc( OFFSET + SQUARE_SIZE / 2, canvas.height - SQUARE_SIZE / 2 - OFFSET,
+    ctx.arc( canvas.width/3 - SQUARE_SIZE / 2 + offsetX, 
+        canvas.height/2 * ( index + 1 ) - SQUARE_SIZE / 2 - OFFSET,
         SQUARE_SIZE / 2, 0, Math.PI * 2 );
     
     // Center lines
-    ctx.moveTo( OFFSET + SQUARE_SIZE / 2, canvas.height - SQUARE_SIZE - OFFSET );
-    ctx.lineTo( OFFSET + SQUARE_SIZE / 2, canvas.height - OFFSET );
-    ctx.moveTo( OFFSET, canvas.height - SQUARE_SIZE / 2 - OFFSET );
-    ctx.lineTo( OFFSET + SQUARE_SIZE, canvas.height - SQUARE_SIZE / 2 - OFFSET );
+    ctx.moveTo( canvas.width/3 - SQUARE_SIZE / 2 + offsetX, canvas.height/2 * ( index + 1 )- SQUARE_SIZE - OFFSET );
+    ctx.lineTo( canvas.width/3 - SQUARE_SIZE / 2 + offsetX, canvas.height/2 * ( index + 1 ) - OFFSET );
+    ctx.moveTo( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET );
+    ctx.lineTo( canvas.width/3 + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET );
     ctx.stroke();
 
     // Pointer
     ctx.beginPath();
     const RADIUS = 5;
-    ctx.arc( OFFSET + SQUARE_SIZE / 2 + gIS.xAxisMove * SQUARE_SIZE / 2, 
-                canvas.height - SQUARE_SIZE / 2 - OFFSET - gIS.yAxisMove * SQUARE_SIZE / 2, 
-                    RADIUS, 0, 2 * Math.PI, false ) ;
-    ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )" ;
+    const GAMEPAD_LEFT_AXIS_X = 0;
+    const GAMEPAD_LEFT_AXIS_Y = 1;
+    const GAMEPAD_RIGHT_AXIS_X = 2;
+    const GAMEPAD_RIGHT_AXIS_Y = 3;
+    const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
+    if( gamepad ){
+        let xAxisMove, yAxisMove;
+        if( isLeft ){
+            xAxisMove = gamepad.axes[ GAMEPAD_LEFT_AXIS_X ];
+            yAxisMove = -1 * gamepad.axes[ GAMEPAD_LEFT_AXIS_Y ];
+        }else{
+            xAxisMove = gamepad.axes[ GAMEPAD_RIGHT_AXIS_X ];
+            yAxisMove = -1 * gamepad.axes[ GAMEPAD_RIGHT_AXIS_Y ];
+        }
+
+        ctx.arc( canvas.width/3 - SQUARE_SIZE / 2  + offsetX + xAxisMove * SQUARE_SIZE / 2, 
+                    canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET - yAxisMove * SQUARE_SIZE / 2, 
+                        RADIUS, 0, 2 * Math.PI, false );
+    }
+    ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )";
     ctx.fill();
     ctx.closePath();
-
-    // Gray out
-    if( gIS.headRotation | gIS.tailRotation | 
-            gIS.leftWheelRotation | gIS.rightWheelRotation | gIS.centerRotation ){
-        ctx.fillStyle = "rgba( 0, 0, 0, 0.3 )" ;
-        ctx.fillRect( OFFSET, canvas.height - SQUARE_SIZE - OFFSET, 
-            SQUARE_SIZE, SQUARE_SIZE );
-    }
 
     ctx.restore();
 
 }
 
 // -- Draw the state of right analog stick. ONLY for x-axis
-const drawAnalogRight = ( context, canvas ) => {
-
-    const RECT_WIDTH = 100;
-    const RECT_HEIGHT = 20;
-    const ctx = context;
-    const X_OFFSET = 296;
-    const Y_OFFSET = 10;
-
-    ctx.save();
-
-    // Rect for rim
-    ctx.fillStyle = "rgba( 255, 255, 255, 0.3 )" ;
-    ctx.strokeStyle = "rgba( 255, 255, 255, 0.6 )" ;
-    ctx.strokeRect( X_OFFSET, canvas.height - RECT_HEIGHT - Y_OFFSET, 
-        RECT_WIDTH, RECT_HEIGHT );
-    ctx.fillRect( X_OFFSET, canvas.height - RECT_HEIGHT - Y_OFFSET, 
-        RECT_WIDTH, RECT_HEIGHT );
-
-    // Center lines
-    ctx.beginPath();
-    ctx.moveTo( X_OFFSET + RECT_WIDTH / 2, canvas.height - RECT_HEIGHT - Y_OFFSET );
-    ctx.lineTo( X_OFFSET + RECT_WIDTH / 2, canvas.height - Y_OFFSET );
-    ctx.moveTo( X_OFFSET, canvas.height - RECT_HEIGHT / 2 - Y_OFFSET );
-    ctx.lineTo( X_OFFSET + RECT_WIDTH, canvas.height - RECT_HEIGHT / 2 - Y_OFFSET );
-    ctx.stroke();
-
-    // Pointer
-    ctx.beginPath();
-    const RADIUS = 5;
-    ctx.arc( X_OFFSET + RECT_WIDTH / 2 + gIS.rotationLeftRight * RECT_WIDTH / 2, 
-                canvas.height - RECT_HEIGHT / 2 - Y_OFFSET, 
-                    RADIUS, 0, 2 * Math.PI, false ) ;
-    ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )" ;
-    ctx.fill();
-    ctx.closePath();
-
-    // Gray out
-    if( gIS.headRotation | gIS.tailRotation | 
-            gIS.leftWheelRotation | gIS.rightWheelRotation | gIS.centerRotation ){
-    }else{
-        if( isValidAnalogValue( gIS.xAxisMove ) || isValidAnalogValue( gIS.yAxisMove ) ){
-            ctx.fillStyle = "rgba( 0, 0, 0, 0.3 )" ;
-            ctx.fillRect( X_OFFSET, canvas.height - RECT_HEIGHT - Y_OFFSET, 
-                RECT_WIDTH, RECT_HEIGHT );
-        }
-    }
-
-    ctx.restore();
+const drawAnalogRight = ( index, context, canvas ) => {
+const SQUARE_SIZE = 100;
+    drawAnalogState( canvas.width/3, 0, index, context, canvas, false );
 
 }
 
@@ -963,10 +933,10 @@ const drawConnectionState = ( index, context, canvas ) => {
     ctx.save();
     if( !isReady4Control( index ) ){
         // Not Ready yet. so this panel is needed.
-        
+
         ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
         ctx.fillRect( 0, index * canvas.height / 2, canvas.width, canvas.height / 2 );
-
+        
         // For Head cube
         if( ( gCubes[index] !== undefined ) && ( gCubes[index].server !== undefined ) ){
             // connected & service registered
@@ -991,10 +961,8 @@ const drawConnectionState = ( index, context, canvas ) => {
         }
         ctx.drawImage( controllerImage, canvas.width/3 + CUBE_SIZE/2, ( 2 * index + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
 
-    ctx.restore();
-
     }
-
+    ctx.restore();
 
 } 
 const drawControllerDescription = ( index, context, canvas ) => {
