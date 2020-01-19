@@ -1,7 +1,7 @@
 
 // Global Constants
 const DEFAULT_SPEED = 0.6;
-let gMaxSpeed = DEFAULT_SPEED;
+let gMaxSpeed = [ DEFAULT_SPEED, DEFAULT_SPEED ];
 
 let gRotationPoint = undefined;
 const ROTATION_CENTER      = 0;
@@ -22,7 +22,7 @@ let gArrowAngle = undefined;    // ArrowAngle for omni-direction move
 
 const gCubes = [ undefined, undefined ];
 
-let gOperationModeIndex = 0;
+let gOperationModeIndexArray = [ 0, 0 ];
 const OPE_MODES_NAME_ARRAY = ['A', 'B', 'C'];
 
 
@@ -162,9 +162,9 @@ const vibrateGamePad = ( gamePad ) => {
 const procKeyDown = ( code ) => {
 
     if( code === KEYCODE_Q ){
-        exchangeHeadTailCube();
+        exchangeCubes();
     }else if( code === KEYCODE_ESC ){
-        reset();
+        reset(0); reset(1);
     }else if( code === KEYCODE_PLUS ){
         plusMaxSpeed();
     }else if( code === KEYCODE_MINUS ){
@@ -174,11 +174,11 @@ const procKeyDown = ( code ) => {
 }
 
 // Key/gamepad Input Status
-const gInputStatus = {
+const gInputStatus = [{
     xAxisMove:0.0,
     yAxisMove:0.0,
     rotationLeftRight:0.0,
-    centerRotation:0.0,
+    rotation:0.0,
     headRotation:0.0,
     tailRotation:0.0,
     leftWheelRotation:0.0,
@@ -186,7 +186,26 @@ const gInputStatus = {
     maxSpeed:0.0,
     changeMaxSpeed:0.0,
     switchOperationMode:0.0,
-    exchangeHeadTail:0.0,
+    exchangeCubes:0.0,
+    reset:0.0,
+    minusMaxSpeed:0.0,
+    plusMaxSpeed:0.0,
+    connectCube1:0.0,
+    connectCube2:0.0,
+    analogOmniMoveDisable:0.0,
+}, {
+    xAxisMove:0.0,
+    yAxisMove:0.0,
+    rotationLeftRight:0.0,
+    rotation:0.0,
+    headRotation:0.0,
+    tailRotation:0.0,
+    leftWheelRotation:0.0,
+    rightWheelRotation:0.0,
+    maxSpeed:0.0,
+    changeMaxSpeed:0.0,
+    switchOperationMode:0.0,
+    exchangeCubes:0.0,
     reset:0.0,
     minusMaxSpeed:0.0,
     plusMaxSpeed:0.0,
@@ -194,165 +213,127 @@ const gInputStatus = {
     connectCube2:0.0,
     analogOmniMoveDisable:0.0,
 }
-const gIS = gInputStatus;
+]
+
 
 // Register into InputStatus
 const registerInput = () => {
 
-    const gamePad = navigator.getGamepads()[ gGamePadIndex ];
+    for( let index of [ 0, 1 ] ){
 
-    const GAMEPAD_LEFT_AXIS_X  = 0;
-    const GAMEPAD_LEFT_AXIS_Y  = 1;
-    const GAMEPAD_RIGHT_AXIS_X = 2;
+        const gamePad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
 
-    const GAMEPAD_BT_0      =  0; // CROSS button, B button 
-    const GAMEPAD_BT_1      =  1; // CIRCLE button, A button
-    const GAMEPAD_BT_2      =  2; // SQUARE button, Y button
-    const GAMEPAD_BT_3      =  3; // TRIANGLE button, X button
-    const GAMEPAD_BT_L1     =  4; // L1 button, L button
-    const GAMEPAD_BT_R1     =  5; // R1 button, R button
-    const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
-    const GAMEPAD_BT_8      =  8; // Share button, - button
-    const GAMEPAD_BT_9      =  9; // Option button, + button
-    const GAMEPAD_BT_UP     = 12;
-    const GAMEPAD_BT_DOWN   = 13;
-    const GAMEPAD_BT_LEFT   = 14;
-    const GAMEPAD_BT_RIGHT  = 15;
-    const GAMEPAD_BT_HOME   = 16; // PS button / Home button
+        const GAMEPAD_LEFT_AXIS_X  = 0;
+        const GAMEPAD_LEFT_AXIS_Y  = 1;
+        const GAMEPAD_RIGHT_AXIS_X = 2;
+        const GAMEPAD_RIGHT_AXIS_Y = 3;
 
-    // Move: X Axis ( Analog Stick mapping )
-    if( getKeyInputValue( KEYCODE_LEFT ) === 1 ){
-        gIS.xAxisMove = -1;
-    }else if( getKeyInputValue( KEYCODE_RIGHT ) === 1 ){
-        gIS.xAxisMove = 1;
-    }else{
-        if( gamePad ){
-            gIS.xAxisMove = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
-            if( 0 /* Math.abs( gIS.xAxisMove ) < 0.1 */ ){
-                gIS.xAxisMove = 0;
-            }
-        }else{
-            gIS.xAxisMove = 0;
-        }
-    }
-    
-    // Move: Y Axis ( Analog Stick mapping )
-    if( getKeyInputValue( KEYCODE_UP ) === 1 ){
-        gIS.yAxisMove = 1;
-    }else if( getKeyInputValue( KEYCODE_DOWN ) === 1 ){
-        gIS.yAxisMove = -1;
-    }else{
-        if( gamePad ){
-            gIS.yAxisMove = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
-            if( 0 /* Math.abs( gIS.yAxisMove ) < 0.1 */ ){
-                gIS.yAxisMove = 0;
-            }
-        }else{
-            gIS.yAxisMove = 0;
-        }
-    }
+        const GAMEPAD_BT_0      =  0; // CROSS button, B button 
+        const GAMEPAD_BT_1      =  1; // CIRCLE button, A button
+        const GAMEPAD_BT_2      =  2; // SQUARE button, Y button
+        const GAMEPAD_BT_3      =  3; // TRIANGLE button, X button
+        const GAMEPAD_BT_L1     =  4; // L1 button, L button
+        const GAMEPAD_BT_R1     =  5; // R1 button, R button
+        const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
+        const GAMEPAD_BT_8      =  8; // Share button, - button
+        const GAMEPAD_BT_9      =  9; // Option button, + button
+        const GAMEPAD_BT_UP     = 12;
+        const GAMEPAD_BT_DOWN   = 13;
+        const GAMEPAD_BT_LEFT   = 14;
+        const GAMEPAD_BT_RIGHT  = 15;
+        const GAMEPAD_BT_HOME   = 16; // PS button / Home button
 
-    // Set output value on the circle for a diagonal position such as Up-left. 
-    if( ( Math.abs( gIS.xAxisMove ) + Math.abs( gIS.yAxisMove ) ) === 2 ){
-        if( ( getKeyInputValue( KEYCODE_UP ) === 1  ) || 
-                ( getKeyInputValue( KEYCODE_DOWN ) === 1  ) ){
-            gIS.xAxisMove /= Math.sqrt(2);
-            gIS.yAxisMove /= Math.sqrt(2);
-        }
-    }
+        const gISItem = gInputStatus[ index ];
 
-    // Head rotation button
-    gIS.headRotation = getKeyInputValue( KEYCODE_H ); 
-    if( gamePad ){ gIS.headRotation |= gamePad.buttons[ GAMEPAD_BT_UP ].value; }
-
-    // Tail rotation button 
-    gIS.tailRotation = getKeyInputValue( KEYCODE_T ); 
-    if( gamePad ){ gIS.tailRotation |= gamePad.buttons[ GAMEPAD_BT_DOWN ].value; }
-
-    // Left Wheel rotation button 
-    gIS.leftWheelRotation = getKeyInputValue( KEYCODE_D );
-    if( gamePad ){ gIS.leftWheelRotation |= gamePad.buttons[ GAMEPAD_BT_LEFT ].value; }
-
-    // Right Wheel rotation button 
-    gIS.rightWheelRotation = getKeyInputValue( KEYCODE_F ); 
-    if( gamePad ){ gIS.rightWheelRotation |= gamePad.buttons[ GAMEPAD_BT_RIGHT ].value; }
-
-    // Center rotation button
-    gIS.centerRotation = getKeyInputValue( KEYCODE_R );
-    if( ( gIS.headRotation | gIS.tailRotation | gIS.leftWheelRotation | gIS.rightWheelRotation ) === 0 ){
-        if( gamePad ){    
-            if( isValidAnalogValue( gamePad.axes[ GAMEPAD_RIGHT_AXIS_X ] ) ){
-                gIS.centerRotation |= 1;
-            }
-        }
-    }
-    
-    // Rotation left/right key, right analog stick 
-    if( gamePad ){
-        gIS.rotationLeftRight = gamePad.axes[ GAMEPAD_RIGHT_AXIS_X ];
-    }else{
-        gIS.rotationLeftRight = 0;
-    }
-
-    if( gIS.headRotation | gIS.tailRotation | 
-            gIS.leftWheelRotation | gIS.rightWheelRotation | gIS.centerRotation ){
+        // Move: X Axis ( Analog Stick mapping )
         if( getKeyInputValue( KEYCODE_LEFT ) === 1 ){
-            gIS.rotationLeftRight = -1;
+            if( index === 0 ){ gISItem.xAxisMove = -1; }
         }else if( getKeyInputValue( KEYCODE_RIGHT ) === 1 ){
-            gIS.rotationLeftRight = 1;
+            if( index === 0 ){ gISItem.xAxisMove = 1; }
+        }else{
+            if( gamePad ){
+                gISItem.xAxisMove = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
+            }else{
+                gISItem.xAxisMove = 0;
+            }
         }
-    }
+        
+        // Move: Y Axis ( Analog Stick mapping )
+        if( getKeyInputValue( KEYCODE_UP ) === 1 ){
+            if( index === 0 ){ gISItem.yAxisMove = 1; }
+        }else if( getKeyInputValue( KEYCODE_DOWN ) === 1 ){
+            if( index === 0 ){ gISItem.yAxisMove = -1; }
+        }else{
+            if( gamePad ){
+                gISItem.yAxisMove = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
+            }else{
+                gISItem.yAxisMove = 0;
+            }
+        }
 
-    // Speed lever / Change button
-    if( gamePad ){
-        gIS.changeMaxSpeed = gamePad.buttons[ GAMEPAD_BT_1 ].value;
-        gIS.maxSpeed = gamePad.buttons[ GAMEPAD_BT_L2 ].value * 115 / 100;
-    }
+        // Set output value on the circle for a diagonal position such as Up-left. 
+        // Later, we should generalize this.
+        if( ( Math.abs( gISItem.xAxisMove ) + Math.abs( gISItem.yAxisMove ) ) === 2 ){
+            if( ( getKeyInputValue( KEYCODE_UP ) === 1  ) || 
+                    ( getKeyInputValue( KEYCODE_DOWN ) === 1  ) ){
+                gISItem.xAxisMove /= Math.sqrt(2);
+                gISItem.yAxisMove /= Math.sqrt(2);
+            }
+        }
+        
+        // Rotation left/right key, right analog stick 
+        if( gamePad ){
+            if( isValidAnalogValue( gamePad.axes[ GAMEPAD_RIGHT_AXIS_X ] ) ){
+                gISItem.rotation = 1;
+            }
+            gISItem.rotationLeftRight = gamePad.axes[ GAMEPAD_RIGHT_AXIS_X ];
+        }else{
+            gISItem.rotationLeftRight = 0;
+        }
 
-    // Exchange Head/Tail button
-    if( gamePad ){ 
-        gIS.exchangeHeadTail = gamePad.buttons[ GAMEPAD_BT_9 ].value; 
-    }else{
-        gIS.exchangeHeadTail = 0;
-    }
+        // Speed lever / Change button
+        if( gamePad ){
+            gISItem.changeMaxSpeed = gamePad.buttons[ GAMEPAD_BT_1 ].value;
+            gISItem.maxSpeed = gamePad.buttons[ GAMEPAD_BT_L2 ].value * 115 / 100;
+        }
 
-    // Switch Operation mode button
-    if( gamePad ){ 
-        gIS.switchOperationMode = gamePad.buttons[ GAMEPAD_BT_8 ].value; 
-    }else{
-        gIS.switchOperationMode = 0;
-    }
+        // Exchange Cube1/Cube2 button
+        if( gamePad ){ 
+            gISItem.exchangeCubes = gamePad.buttons[ GAMEPAD_BT_9 ].value; 
+        }else{
+            gISItem.exchangeCubes = 0;
+        }
 
-    // Reset button
-    if( gamePad ){
-        gIS.reset = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
-    }else{
-        gIS.reset = 0;
-    }
+        // Switch Operation mode button
+        if( gamePad ){ 
+            gISItem.switchOperationMode = gamePad.buttons[ GAMEPAD_BT_8 ].value; 
+        }else{
+            gISItem.switchOperationMode = 0;
+        }
 
-    // Speed Plus/Minus setting
-    if( gamePad ){
-        gIS.minusMaxSpeed = gamePad.buttons[ GAMEPAD_BT_L1 ].value;
-        gIS.plusMaxSpeed  = gamePad.buttons[ GAMEPAD_BT_R1 ].value;
-    }else{
-        gIS.minusMaxSpeed = 0;
-        gIS.plusMaxSpeed = 0;
-    }
+        // Reset button
+        if( gamePad ){
+            gISItem.reset = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
+        }else{
+            gISItem.reset = 0;
+        }
 
-    // Connect Cubes
-    if( gamePad ){
-        gIS.connectCube1 = gamePad.buttons[ GAMEPAD_BT_2 ].value;
-        gIS.connectCube2 = gamePad.buttons[ GAMEPAD_BT_3 ].value;
-    }else{
-        gIS.connectCube1 = 0;
-        gIS.connectCube2 = 0;
-    }
+        // Speed Plus/Minus setting
+        if( gamePad ){
+            gISItem.minusMaxSpeed = gamePad.buttons[ GAMEPAD_BT_L1 ].value;
+            gISItem.plusMaxSpeed  = gamePad.buttons[ GAMEPAD_BT_R1 ].value;
+        }else{
+            gISItem.minusMaxSpeed = 0;
+            gISItem.plusMaxSpeed = 0;
+        }
 
-    // Analog Omni-direction movement
-    if( gamePad ){
-        gIS.analogOmniMoveDisable = gamePad.buttons[ GAMEPAD_BT_0 ].value;
-    }else{
-        gIS.analogOmniMoveDisable = 0;
+        // Analog Omni-direction movement
+        if( gamePad ){
+            gISItem.analogOmniMoveDisable = gamePad.buttons[ GAMEPAD_BT_0 ].value;
+        }else{
+            gISItem.analogOmniMoveDisable = 0;
+        }
+
     }
 
 }
@@ -400,247 +381,147 @@ const updateStatus = () => {
 
 const executeCubeCommand = () => {
 
-    // Move/Rotation
-    if( gIS.centerRotation === 1 ){
-        // Center rotation mode
-        opRotationCenter();
-        // console.log( "centerRotation");
-    }else if( gIS.headRotation === 1 ){
-        // Head rotation mode
-        opRotationHead();
-        // console.log( "headRotation");
-    }else if( gIS.tailRotation === 1 ){
-        // Tail rotation mode
-        opRotationTail();
-        // console.log( "tailRotation");
-    }else if( gIS.leftWheelRotation === 1 ){
-        // Left wheel rotation mode
-        opRotationLeftWheel();
-        // console.log( "leftWheelRotation");
-    }else if( gIS.rightWheelRotation === 1 ){
-        // Right wheel rotation mode
-        opRotationRightWheel();
-        // console.log( "rightWheelRotation");
-    }else if( isValidAnalogValue( gIS.xAxisMove ) || isValidAnalogValue( gIS.yAxisMove ) ){ 
-        // Omni-direction movement mode.
-        opMove();
-        // console.log( "move." );
-    }else{
-        opNoCommand();
-    }
+    for( let index of [ 0, 1 ] ){
+        
+        const gISItem = gInputStatus[ index ];
 
+        // Move/Rotation
+        if( gISItem.rotation === 1 ){
+            // rotation mode
+            opRotation( index );
+            // console.log( "rotation");
+        }else if( isValidAnalogValue( gISItem.xAxisMove ) || isValidAnalogValue( gISItem.yAxisMove ) ){ 
+            // Omni-direction movement mode.
+            opMove( index );
+            // console.log( "move." );
+        }else{
+            // opNoCommand();
+        }
+
+    }
 }
 
 
 // Operations
 
 // Opratoin for setting.
-let gPreviousExchangeHeadTail = 0.0;
-let gPreviousSwitchOperationMode = 0.0;
-let gPreviousReset = 0.0;
-let gPreviousMinusMaxSpeed = 0.0;
-let gPreviousPlusMaxSpeed = 0.0;
-let gChangeSpeedMode = 0;
-let gPreviousConnectCube1 = 0.0;
-let gPreviousConnectCube2 = 0.0;
+let gPreviousExchangeCubes = [ 0.0, 0.0 ];
+let gPreviousSwitchOperationMode = [ 0.0, 0.0 ];
+let gPreviousReset = [ 0.0, 0.0 ];
+let gPreviousMinusMaxSpeed = [ 0.0, 0.0 ];
+let gPreviousPlusMaxSpeed = [ 0.0, 0.0 ];
+let gChangeSpeedMode = [ 0, 0 ];
 
 const opSettings = () => {
 
-    // Set MAX speed
-    if( gIS.changeMaxSpeed === 1 ){
-        document.getElementById( "speedText" ).style.color = 'red';
-        if( gIS.maxSpeed !== 0 ){
-            gChangeSpeedMode = 1;
-        }
+    for( let index of [ 0, 1 ] ){
+            
+        const gISItem = gInputStatus[ index ];
 
-        if( gChangeSpeedMode ){
-            setMaxSpeed( gIS.maxSpeed );
-        }
-    }else{
-        document.getElementById( "speedText" ).style.color = 'black';
-        gChangeSpeedMode = 0;
-    }
-
-    // Head/Tail cube setting
-    if( gIS.exchangeHeadTail === 1 ){
-        if( gPreviousExchangeHeadTail === 0 ){
-            // Exchange 0/1 gCubes
-            exchangeHeadTailCube();
-            // console.log( "exchangeHeadTail done ");
-        }
-    }
-    gPreviousExchangeHeadTail = gIS.exchangeHeadTail;
-
-    // Switch operation mode
-    if( gIS.switchOperationMode === 1 ){
-        if( gPreviousSwitchOperationMode === 0 ){
-            // Switch operation mode to next one.
-            switchOperationMode();
-        }
-    }
-    gPreviousSwitchOperationMode = gIS.switchOperationMode;
-
-    // Reset setting
-    if( gIS.reset === 1 ){
-        if( gPreviousReset === 0 ){
-            reset();
-            // console.log( "Reset done ");
-        }
-    }
-    gPreviousReset = gIS.reset;
-
-    // minus max speed
-    if( gIS.minusMaxSpeed === 1 ){
-        if( gPreviousMinusMaxSpeed === 0 ){
-            minusMaxSpeed();
-        }
-    }
-    gPreviousMinusMaxSpeed = gIS.minusMaxSpeed;
-    
-    // plus max speed
-    if( gIS.plusMaxSpeed === 1 ){
-        if( gPreviousPlusMaxSpeed === 0 ){
-            plusMaxSpeed();
-        }
-    }
-    gPreviousPlusMaxSpeed = gIS.plusMaxSpeed;
-
-    // connect Cubes 1
-    if( gIS.connectCube1 === 1 ){
-        if( gPreviousConnectCube1 === 0 ){
-            if( document.getElementById( "btConnectCube1" ).disabled === false ){
-                gCubes[0] = connectNewCube();
+        // Head/Tail cube setting
+        if( gISItem.exchangeCubes === 1 ){
+            if( gPreviousExchangeCubes[ index ] === 0 ){
+                // Exchange 0/1 gCubes
+                exchangeCubes();
+                // console.log( "exchangeCubes done ");
             }
         }
-    }
-    gPreviousConnectCube1 = gIS.connectCube1;
+        gPreviousExchangeCubes[ index ] = gISItem.exchangeCubes;
 
-    // connect Cubes 2
-    if( gIS.connectCube2 === 1 ){
-        if( gPreviousConnectCube2 === 0 ){
-            if( document.getElementById( "btConnectCube2" ).disabled === false ){
-                gCubes[1] = connectNewCube();
+        // Switch operation mode
+        if( gISItem.switchOperationMode === 1 ){
+            if( gPreviousSwitchOperationMode[ index ] === 0 ){
+                // Switch operation mode to next one.
+                switchOperationMode( index );
             }
         }
+        gPreviousSwitchOperationMode[ index ] = gISItem.switchOperationMode;
+
+        // Reset setting
+        if( gISItem.reset === 1 ){
+            if( gPreviousReset[ index ] === 0 ){
+                reset( index );
+                // console.log( "Reset done ");
+            }
+        }
+        gPreviousReset[ index ] = gISItem.reset;
+
+        // minus max speed
+        if( gISItem.minusMaxSpeed === 1 ){
+            if( gPreviousMinusMaxSpeed[ index ] === 0 ){
+                minusMaxSpeed( index );
+            }
+        }
+        gPreviousMinusMaxSpeed[ index ] = gISItem.minusMaxSpeed;
+        
+        // plus max speed
+        if( gISItem.plusMaxSpeed === 1 ){
+            if( gPreviousPlusMaxSpeed[ index ] === 0 ){
+                plusMaxSpeed( index );
+            }
+        }
+        gPreviousPlusMaxSpeed[ index ] = gISItem.plusMaxSpeed;
+
+
     }
-    gPreviousConnectCube2 = gIS.connectCube2;
 
 }
 
 // Operation for Rotation around center
-const opRotationCenter = () => {
-
-    gRotationPoint = ROTATION_CENTER;
-    setRotationDirection( gIS.rotationLeftRight );
-    gArrowAngle = undefined;
-    
-    const unitSpeed = Math.round( gMaxSpeed * 100 * gIS.rotationLeftRight / Math.sqrt(2) );
-
-    setMotorSpeed( gCubes[0], unitSpeed, -1 * unitSpeed );
-    setMotorSpeed( gCubes[1], unitSpeed, -1 * unitSpeed );
-
+const opRotation = ( index ) => {
+    const gISItem = gInputStatus[ index ];
+    const unitSpeed = Math.round( gMaxSpeed[index] * 100 * gISItem.rotationLeftRight );
+    setMotorSpeed( gCubes[ index ], -1 * unitSpeed, unitSpeed );
 }
 
-// Operation for Rotation around first
-const opRotationHead = () => {
-    gRotationPoint = ROTATION_HEAD;
-    setRotationDirection( gIS.rotationLeftRight );
-    gArrowAngle = undefined;
-
-    const unitSpeed = Math.round( gMaxSpeed * 100 * gIS.rotationLeftRight );
-
-    setMotorSpeed( gCubes[0],              0,         0 );
-    setMotorSpeed( gCubes[1], -1 * unitSpeed, unitSpeed );
-
-}
-
-// Operation for Rotation around second
-const opRotationTail = () => {
-    gRotationPoint = ROTATION_TAIL;
-    setRotationDirection( gIS.rotationLeftRight );
-    gArrowAngle = undefined;
-
-    const unitSpeed = Math.round( gMaxSpeed * 100 * gIS.rotationLeftRight );
-
-    setMotorSpeed( gCubes[0], unitSpeed, -1 * unitSpeed );
-    setMotorSpeed( gCubes[1],         0,              0 );
-}
-
-// Operation for Rotation around left wheel
-const opRotationLeftWheel = () => {
-    gRotationPoint = ROTATION_LEFT_WHEEL;
-    setRotationDirection( gIS.rotationLeftRight );
-    gArrowAngle = undefined;
-
-    const unitSpeed = Math.round( gMaxSpeed * 100 * gIS.rotationLeftRight );
-
-    setMotorSpeed( gCubes[0], 0, -1 * unitSpeed );
-    setMotorSpeed( gCubes[1], 0, -1 * unitSpeed );
-}
-
-// Operation for Rotation around right wheel
-const opRotationRightWheel = () => {
-    gRotationPoint = ROTATION_RIGHT_WHEEL;
-    setRotationDirection( gIS.rotationLeftRight );
-    gArrowAngle = undefined;
-
-    const unitSpeed = Math.round( gMaxSpeed * 100 * gIS.rotationLeftRight );
-
-    setMotorSpeed( gCubes[0], unitSpeed, 0 );
-    setMotorSpeed( gCubes[1], unitSpeed, 0 );
-
-}
 
 // Operation for omni-direction move
-const opMove = () => {
+const opMove = ( index ) => {
 
-    // Omni-direction logic. See https://qiita.com/tetunori_lego/items/37477c40b16f8eab384f in detail.
-    if( gIS.analogOmniMoveDisable === 1 ){
-        gArrowAngle = -1 * Math.round( 4 * Math.atan2( gIS.yAxisMove, gIS.xAxisMove) / Math.PI ) * Math.PI/4;
-    }else{
-        gArrowAngle = -1 * Math.atan2( gIS.yAxisMove, gIS.xAxisMove);
-    }
-    // console.log( "move. gArrowAngle is " + gArrowAngle );
-    gRotationPoint = undefined;
+    const gISItem = gInputStatus[ index ];
+    const magnitude = gMaxSpeed[index] * 100 * Math.sqrt( gISItem.xAxisMove * gISItem.xAxisMove + gISItem.yAxisMove * gISItem.yAxisMove );
+    // console.log( magnitude );
 
-    moveOmniDirection();
+    let moveSpeedUpRightDownLeft;
+    let moveSpeedUpLeftDownRight;
+
+    moveSpeedUpRightDownLeft = -1 * Math.round( magnitude * Math.sin( gArrowAngle + Math.PI / 4 ) );
+    moveSpeedUpLeftDownRight = -1 * Math.round( magnitude * Math.sin( gArrowAngle - Math.PI / 4 ) );
+
+    setMotorSpeed( gCubes[index], moveSpeedUpLeftDownRight, moveSpeedUpRightDownLeft );
+
 }
 
 // Operation for no command
 const opNoCommand = () => {
 
-    gArrowAngle = undefined;
-    gRotationPoint = undefined;
-
 }
 
 
 // Sub-Functions
-const setMaxSpeed = ( speed ) => {
+const setMaxSpeed = ( index, speed ) => {
 
-    gMaxSpeed = speed;
-    document.getElementById( "speedText" ).innerText = "Max Speed: " + Math.round( speed * 100 );
-    document.getElementById( "speedSlidebar" ).value = Math.round( speed * 100 );
+    gMaxSpeed[index] = speed;
 
 }
 
-const plusMaxSpeed = () => {
-    let speed = gMaxSpeed + 0.1;
+const plusMaxSpeed = ( index ) => {
+    let speed = gMaxSpeed[index] + 0.1;
     if( speed > 1.15 ){
         speed = 1.15;
     }
-    setMaxSpeed( speed );
+    setMaxSpeed( index, speed );
 }
 
-const minusMaxSpeed = () => {
-    let speed = gMaxSpeed - 0.1;
+const minusMaxSpeed = ( index ) => {
+    let speed = gMaxSpeed[index] - 0.1;
     if( speed < 0 ){
         speed = 0;
     }
-    setMaxSpeed( speed );
+    setMaxSpeed( index, speed );
 }
 
-const exchangeHeadTailCube = () => {
+const exchangeCubes = () => {
 
     [ gCubes[0], gCubes[1] ] = [ gCubes[1], gCubes[0] ];
 
@@ -657,29 +538,18 @@ const exchangeHeadTailCube = () => {
 
 }
 
-const switchOperationMode = () => {
+const switchOperationMode = ( index ) => {
 
-    gOperationModeIndex++;
-    if( gOperationModeIndex > OPE_MODES_NAME_ARRAY.length - 1 ){
-        gOperationModeIndex = 0;
+    gOperationModeIndexArray[ index ]++;
+    if( gOperationModeIndexArray[ index ] > OPE_MODES_NAME_ARRAY.length - 1 ){
+        gOperationModeIndexArray[ index ] = 0;
     }
 
 }
 
 const lightHeadCube = () => { turnOnLightWhiteBriefly( gCubes[0] ); }
 
-const reset = () => { setMaxSpeed( DEFAULT_SPEED ); }
-
-const isRotationMode = () => {
-
-    if( gIS.headRotation | gIS.tailRotation | 
-        gIS.leftWheelRotation | gIS.rightWheelRotation | gIS.centerRotation ){
-        return true;
-    }else{
-        return false;
-    }
-
-}
+const reset = ( index ) => { setMaxSpeed( index, DEFAULT_SPEED ); }
 
 const isValidAnalogValue = ( value ) => {
 
@@ -689,37 +559,6 @@ const isValidAnalogValue = ( value ) => {
     }else{
         return false;
     }
-
-}
-
-const setRotationDirection = ( value ) => {
-
-    if( isValidAnalogValue( value ) ){
-        if( value > 0 ){
-            gRotationDirection = ROTATION_DIR_LEFT;
-        }else{
-            gRotationDirection = ROTATION_DIR_RIGHT;
-        }
-    }else{
-        gRotationDirection = undefined;
-    }
-    // console.log( gRotationDirection );
-
-}
-
-const moveOmniDirection = () => {
-
-    const magnitude = gMaxSpeed * 100 * Math.sqrt( gIS.xAxisMove * gIS.xAxisMove + gIS.yAxisMove * gIS.yAxisMove );
-    // console.log( magnitude );
-
-    let moveSpeedUpRightDownLeft;
-    let moveSpeedUpLeftDownRight;
-
-    moveSpeedUpRightDownLeft = -1 * Math.round( magnitude * Math.sin( gArrowAngle + Math.PI / 4 ) );
-    moveSpeedUpLeftDownRight = -1 * Math.round( magnitude * Math.sin( gArrowAngle - Math.PI / 4 ) );
-
-    setMotorSpeed( gCubes[0], moveSpeedUpLeftDownRight, moveSpeedUpRightDownLeft );
-    setMotorSpeed( gCubes[1], moveSpeedUpRightDownLeft, moveSpeedUpLeftDownRight );
 
 }
 
@@ -1037,14 +876,14 @@ const drawStatus = ( index, context, canvas ) => {
 
     // Mode text
     let modeText = 'Op. Mode: ';
-    modeText += OPE_MODES_NAME_ARRAY[ gOperationModeIndex ];
+    modeText += OPE_MODES_NAME_ARRAY[ gOperationModeIndexArray[index] ];
     let xPosMode = 2*canvas.width/3 + 12;
     let yPosMode = canvas.height/2 * ( index + 1 ) -100;
     ctx.fillText( modeText, xPosMode, yPosMode );
 
     // Max speed text
     let maxSpeedText = 'Max Speed: ';
-    maxSpeedText += Math.round( gMaxSpeed * 100 );
+    maxSpeedText += Math.round( gMaxSpeed[index] * 100 );
     let xPosMaxSpeed = 2*canvas.width/3 + 12;
     let yPosMaxSpeed = canvas.height/2 * ( index + 1 ) - 70;
     ctx.fillText( maxSpeedText, xPosMaxSpeed, yPosMaxSpeed );
@@ -1170,15 +1009,8 @@ const initialize = () => {
         window.open('https://github.com/tetunori/MechanumWheelControlWebBluetooth/blob/master/README.md','_blank');
     });
 
-    // Event Listning for Speed Slide Bar.
-    document.getElementById( "speedSlidebar" ).addEventListener( "input", async ev => {
-
-        // console.log( ev.target.value );
-        setMaxSpeed( ev.target.value * 0.01 );
-        
-    });
-
-    setMaxSpeed( DEFAULT_SPEED );
+    setMaxSpeed( 0, DEFAULT_SPEED );
+    setMaxSpeed( 1, DEFAULT_SPEED );
 
     updateStatus();
 
