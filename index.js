@@ -22,6 +22,9 @@ let gArrowAngle = undefined;    // ArrowAngle for omni-direction move
 
 const gCubes = [ undefined, undefined ];
 
+let gOperationModeIndex = 0;
+const OPE_MODES_NAME_ARRAY = ['A', 'B', 'C'];
+
 
 // On Input
 // Gamepad Listner
@@ -182,6 +185,7 @@ const gInputStatus = {
     rightWheelRotation:0.0,
     maxSpeed:0.0,
     changeMaxSpeed:0.0,
+    switchOperationMode:0.0,
     exchangeHeadTail:0.0,
     reset:0.0,
     minusMaxSpeed:0.0,
@@ -208,6 +212,7 @@ const registerInput = () => {
     const GAMEPAD_BT_L1     =  4; // L1 button, L button
     const GAMEPAD_BT_R1     =  5; // R1 button, R button
     const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
+    const GAMEPAD_BT_8      =  8; // Share button, - button
     const GAMEPAD_BT_9      =  9; // Option button, + button
     const GAMEPAD_BT_UP     = 12;
     const GAMEPAD_BT_DOWN   = 13;
@@ -301,7 +306,7 @@ const registerInput = () => {
     // Speed lever / Change button
     if( gamePad ){
         gIS.changeMaxSpeed = gamePad.buttons[ GAMEPAD_BT_1 ].value;
-        gIS.maxSpeed = gamePad.buttons[ GAMEPAD_BT_L2 ].value;
+        gIS.maxSpeed = gamePad.buttons[ GAMEPAD_BT_L2 ].value * 115 / 100;
     }
 
     // Exchange Head/Tail button
@@ -309,6 +314,13 @@ const registerInput = () => {
         gIS.exchangeHeadTail = gamePad.buttons[ GAMEPAD_BT_9 ].value; 
     }else{
         gIS.exchangeHeadTail = 0;
+    }
+
+    // Switch Operation mode button
+    if( gamePad ){ 
+        gIS.switchOperationMode = gamePad.buttons[ GAMEPAD_BT_8 ].value; 
+    }else{
+        gIS.switchOperationMode = 0;
     }
 
     // Reset button
@@ -376,7 +388,7 @@ const updateStatus = () => {
     for( let index of [ 0, 1 ] ){
         drawAnalogLeft( index, ctx, canvas );
         drawAnalogRight( index, ctx, canvas );
-        // drawStatus( index, ctx, canvas );
+        drawStatus( index, ctx, canvas );
         
         // Mainly for before connection
         drawConnectionState( index, ctx, canvas );
@@ -424,6 +436,7 @@ const executeCubeCommand = () => {
 
 // Opratoin for setting.
 let gPreviousExchangeHeadTail = 0.0;
+let gPreviousSwitchOperationMode = 0.0;
 let gPreviousReset = 0.0;
 let gPreviousMinusMaxSpeed = 0.0;
 let gPreviousPlusMaxSpeed = 0.0;
@@ -457,6 +470,15 @@ const opSettings = () => {
         }
     }
     gPreviousExchangeHeadTail = gIS.exchangeHeadTail;
+
+    // Switch operation mode
+    if( gIS.switchOperationMode === 1 ){
+        if( gPreviousSwitchOperationMode === 0 ){
+            // Switch operation mode to next one.
+            switchOperationMode();
+        }
+    }
+    gPreviousSwitchOperationMode = gIS.switchOperationMode;
 
     // Reset setting
     if( gIS.reset === 1 ){
@@ -604,8 +626,8 @@ const setMaxSpeed = ( speed ) => {
 
 const plusMaxSpeed = () => {
     let speed = gMaxSpeed + 0.1;
-    if( speed > 1 ){
-        speed = 1;
+    if( speed > 1.15 ){
+        speed = 1.15;
     }
     setMaxSpeed( speed );
 }
@@ -631,6 +653,15 @@ const exchangeHeadTailCube = () => {
     cube = gCubes[1];
     if( ( cube !== undefined ) && ( cube.lightChar !== undefined ) ){
         turnOnLightGreen( cube );
+    }
+
+}
+
+const switchOperationMode = () => {
+
+    gOperationModeIndex++;
+    if( gOperationModeIndex > OPE_MODES_NAME_ARRAY.length - 1 ){
+        gOperationModeIndex = 0;
     }
 
 }
@@ -846,7 +877,7 @@ const drawBackground = ( context, canvas ) => {
 // -- Draw the state of left analog stick
 const drawAnalogLeft = ( index, context, canvas ) => {
 
-    drawAnalogState( 0, 0, index, context, canvas, true );
+    drawAnalogState( -6, 0, index, context, canvas, true );
 
 }
 
@@ -911,8 +942,8 @@ const drawAnalogState = ( offsetX, offsetY, index, context, canvas, isLeft ) => 
 
 // -- Draw the state of right analog stick. ONLY for x-axis
 const drawAnalogRight = ( index, context, canvas ) => {
-const SQUARE_SIZE = 100;
-    drawAnalogState( canvas.width/3, 0, index, context, canvas, false );
+
+    drawAnalogState( canvas.width/3 - 10, 0, index, context, canvas, false );
 
 }
 
@@ -964,7 +995,8 @@ const drawConnectionState = ( index, context, canvas ) => {
     }
     ctx.restore();
 
-} 
+}
+
 const drawControllerDescription = ( index, context, canvas ) => {
     const ctx = context;
     const CUBE_SIZE = 120;
@@ -979,8 +1011,7 @@ const drawControllerDescription = ( index, context, canvas ) => {
     let yPosDesc = ( 2 * index + 1 ) * canvas.height/4 - 48;
 
     if( gCurrentGamePadIndices[index] !== undefined ){
-        description = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ].id;
-        description = replaceSpecialDescription( description );
+        description = getDescription( index );
         if( description.length > 20 ){
             description = description.slice( 0, 20 ) + '...';;
         }
@@ -995,19 +1026,51 @@ const drawControllerDescription = ( index, context, canvas ) => {
 
 }
 
-const replaceSpecialDescription = ( description ) => {
+const drawStatus = ( index, context, canvas ) => {
+    const ctx = context;
+    const CUBE_SIZE = 120;
+    ctx.save();
+    
+    ctx.font = "14px 'Noto Sans JP'";
+    ctx.textAlign = 'left'
+    ctx.fillStyle = 'rgba(255, 255, 255)';
 
-    let returnValue = description;
+    // Mode text
+    let modeText = 'Op. Mode: ';
+    modeText += OPE_MODES_NAME_ARRAY[ gOperationModeIndex ];
+    let xPosMode = 2*canvas.width/3 + 12;
+    let yPosMode = canvas.height/2 * ( index + 1 ) -100;
+    ctx.fillText( modeText, xPosMode, yPosMode );
 
-    if( description.indexOf('Joy-Con L+R') != -1 ){
-        returnValue = 'Joy-Con L+R';
-    }else if( description.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 05c4)') != -1 ){
-        returnValue = 'DUALSHOCK 4(1st Gen)';
-    }else if( description.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 09cc)') != -1 ){
-        returnValue = 'DUALSHOCK 4(2nd Gen)';
+    // Max speed text
+    let maxSpeedText = 'Max Speed: ';
+    maxSpeedText += Math.round( gMaxSpeed * 100 );
+    let xPosMaxSpeed = 2*canvas.width/3 + 12;
+    let yPosMaxSpeed = canvas.height/2 * ( index + 1 ) - 70;
+    ctx.fillText( maxSpeedText, xPosMaxSpeed, yPosMaxSpeed );
+
+    ctx.restore();
+
+}
+
+const getDescription = ( index ) => {
+
+    let description;
+    let gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
+    if( gamepad ){
+
+        if( isJoyCon( index ) ){
+            description = 'Joy-Con L+R';
+        }else if( isDualShock4_1stGen( index ) ){
+            description = 'DUALSHOCK 4(1st Gen)';
+        }else if( isDualShock4_2ndGen( index ) ){
+            description = 'DUALSHOCK 4(2nd Gen)';
+        }else{
+            description = gamepad.id;
+        }
     }
 
-    return returnValue;
+    return description;
 
 }
 
@@ -1021,6 +1084,70 @@ const isReady4Control = ( index ) => {
         return true;
     }
 
+}
+
+const isDualShock4_1stGen = ( gamepadIdx ) => {
+
+    let gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
+    if( gamepad ){
+
+        let gamepadDesc = gamepad.id;
+        if( gamepadDesc.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 05c4)') !== -1 ){
+            return true;
+        }else{
+            return false;
+        }
+
+    }else{
+        return false;
+    }
+
+}
+
+const isDualShock4_2ndGen = ( gamepadIdx ) => {
+
+    let gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
+    if( gamepad ){
+
+        let gamepadDesc = gamepad.id;
+        if( gamepadDesc.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 09cc)') !== -1 ){
+            return true;
+        }else{
+            return false;
+        }
+
+    }else{
+        return false;
+    }
+
+}
+
+const isDualShock4 = ( gamepadIdx ) => {
+
+    if( isDualShock4_1stGen( gamepadIdx ) || isDualShock4_2ndGen( gamepadIdx ) ){
+        return true;
+    }else{
+        return false;
+    }
+    
+}
+
+const isJoyCon = ( gamepadIdx ) => {
+
+    let gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
+    if( gamepad ){
+
+        let gamepadDesc = gamepad.id;
+        if( gamepadDesc.indexOf('Joy-Con L+R') !== -1 ){
+            return true;
+        }else{
+            return false;
+        }
+
+    }else{
+        return false;
+    }
+    
 }
 
 // Initialize 
