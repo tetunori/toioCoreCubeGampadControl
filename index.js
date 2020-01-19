@@ -18,7 +18,6 @@ let gGamePadIndexArray = new Array();
 let gCurrentGamePadIndices = [ undefined, undefined ];
 
 let gGamePadIndex = undefined;
-let gArrowAngle = undefined;    // ArrowAngle for omni-direction move
 
 const gCubes = [ undefined, undefined ];
 
@@ -192,7 +191,7 @@ const gInputStatus = [{
     plusMaxSpeed:0.0,
     connectCube1:0.0,
     connectCube2:0.0,
-    analogOmniMoveDisable:0.0,
+    analogMoveDisable:0.0,
 }, {
     xAxisMove:0.0,
     yAxisMove:0.0,
@@ -211,7 +210,7 @@ const gInputStatus = [{
     plusMaxSpeed:0.0,
     connectCube1:0.0,
     connectCube2:0.0,
-    analogOmniMoveDisable:0.0,
+    analogMoveDisable:0.0,
 }
 ]
 
@@ -285,6 +284,8 @@ const registerInput = () => {
         if( gamePad ){
             if( isValidAnalogValue( gamePad.axes[ GAMEPAD_RIGHT_AXIS_X ] ) ){
                 gISItem.rotation = 1;
+            }else{
+                gISItem.rotation = 0;
             }
             gISItem.rotationLeftRight = gamePad.axes[ GAMEPAD_RIGHT_AXIS_X ];
         }else{
@@ -329,9 +330,9 @@ const registerInput = () => {
 
         // Analog Omni-direction movement
         if( gamePad ){
-            gISItem.analogOmniMoveDisable = gamePad.buttons[ GAMEPAD_BT_0 ].value;
+            gISItem.analogMoveDisable = gamePad.buttons[ GAMEPAD_BT_0 ].value;
         }else{
-            gISItem.analogOmniMoveDisable = 0;
+            gISItem.analogMoveDisable = 0;
         }
 
     }
@@ -389,7 +390,7 @@ const executeCubeCommand = () => {
         if( gISItem.rotation === 1 ){
             // rotation mode
             opRotation( index );
-            // console.log( "rotation");
+            console.log( "rotation");
         }else if( isValidAnalogValue( gISItem.xAxisMove ) || isValidAnalogValue( gISItem.yAxisMove ) ){ 
             // Omni-direction movement mode.
             opMove( index );
@@ -471,7 +472,7 @@ const opSettings = () => {
 const opRotation = ( index ) => {
     const gISItem = gInputStatus[ index ];
     const unitSpeed = Math.round( gMaxSpeed[index] * 100 * gISItem.rotationLeftRight );
-    setMotorSpeed( gCubes[ index ], -1 * unitSpeed, unitSpeed );
+    setMotorSpeed( gCubes[ index ], unitSpeed, -1 * unitSpeed );
 }
 
 
@@ -482,13 +483,39 @@ const opMove = ( index ) => {
     const magnitude = gMaxSpeed[index] * 100 * Math.sqrt( gISItem.xAxisMove * gISItem.xAxisMove + gISItem.yAxisMove * gISItem.yAxisMove );
     // console.log( magnitude );
 
-    let moveSpeedUpRightDownLeft;
-    let moveSpeedUpLeftDownRight;
+    let angle;
+    if( gISItem.analogMoveDisable === 1 ){
+        angle = Math.round( 4 * Math.atan2( gISItem.yAxisMove, gISItem.xAxisMove) / Math.PI ) * Math.PI/4;
+    }else{
+        angle = Math.atan2( gISItem.yAxisMove, gISItem.xAxisMove );
+    }
+    
+    console.log( angle );
+    let left, right;
 
-    moveSpeedUpRightDownLeft = -1 * Math.round( magnitude * Math.sin( gArrowAngle + Math.PI / 4 ) );
-    moveSpeedUpLeftDownRight = -1 * Math.round( magnitude * Math.sin( gArrowAngle - Math.PI / 4 ) );
+    if( ( -3 * Math.PI/4 < angle ) && ( angle < -1 * Math.PI/4 ) ){
+        // Backward
+        if( Math.abs( angle + Math.PI/2 ) < Math.PI/18 ){
+            angle = -1 * Math.PI/2;
+        }
+        left  = Math.round( magnitude * Math.sin( angle/2 - Math.PI / 2 ) );
+        right = Math.round( magnitude * Math.sin( angle/2) );
+    }else if( ( -1 * Math.PI/4  < angle ) && ( angle < 0 ) ){
+        left  = Math.round( magnitude * Math.sin( Math.PI / 2 ) );
+        right = Math.round( magnitude * Math.sin( 0 ) );
+    }else if( ( -1 * Math.PI < angle ) && ( angle < -3 * Math.PI/4 ) ){
+        left  = Math.round( magnitude * Math.sin( Math.PI ) );
+        right = Math.round( magnitude * Math.sin( Math.PI / 2 ) );
+    }else{
+        // Forward 
+        if( Math.abs( angle - Math.PI/2 ) < Math.PI/18 ){
+            angle = Math.PI/2;
+        }
+        left  = Math.round( magnitude * Math.sin( angle/2 + Math.PI / 2 ) );
+        right = Math.round( magnitude * Math.sin( angle/2 ) );
+    }
 
-    setMotorSpeed( gCubes[index], moveSpeedUpLeftDownRight, moveSpeedUpRightDownLeft );
+    setMotorSpeed( gCubes[index], left, right );
 
 }
 
@@ -674,14 +701,14 @@ const turnOnLightWhiteBriefly = ( cube ) => {
 const setMotorSpeed = ( cube, left, right ) => {
     
     let leftDirection;
-    if( left < 0 /* reverse */){
+    if( left > 0 ){
         leftDirection = 0x01;
     }else{
         leftDirection = 0x02;
     }
 
     let rightDirection;
-    if( right < 0 /* reverse */ ){
+    if( right > 0 ){
         rightDirection = 0x01;
     }else{
         rightDirection = 0x02;
