@@ -493,6 +493,43 @@ const opMove = ( index ) => {
     console.log( angle );
     let left, right;
 
+    // Forward 
+    if( Math.abs( angle - Math.PI/2 ) < Math.PI/9 ){
+        left  = Math.round( magnitude );
+        right = Math.round( magnitude );
+    }else if( Math.abs( angle + Math.PI/2 ) < Math.PI/9 ){
+        left  = -1 * Math.round( magnitude );
+        right = -1 * Math.round( magnitude );
+    }else if( Math.abs( angle ) < Math.PI/18 ){
+        left  = Math.round( magnitude );
+        right = Math.round( 0 );
+    }else if( ( Math.abs( angle + Math.PI ) < Math.PI/18 ) || ( Math.abs( angle - Math.PI ) < Math.PI/18 ) ){
+        left  = Math.round( 0 );
+        right = Math.round( magnitude );
+    }else{
+        if( Math.cos( angle ) >= 0 ){
+            if( Math.sin( angle ) >= 0 ){
+                left  = Math.round( magnitude );
+                right = Math.round( magnitude * gISItem.yAxisMove );
+            }else{
+                left  = -1 * Math.round( magnitude );
+                right = Math.round( magnitude * gISItem.yAxisMove );
+            }
+        }else{
+            if( Math.sin( angle ) >= 0 ){
+                left  = Math.round( magnitude * gISItem.yAxisMove );
+                right = Math.round( magnitude );
+            }else{
+                left  = Math.round( magnitude * gISItem.yAxisMove );
+                right = -1 * Math.round( magnitude );
+            }
+        }
+    }
+    
+
+    
+
+/*
     if( ( -3 * Math.PI/4 < angle ) && ( angle < -1 * Math.PI/4 ) ){
         // Backward
         if( Math.abs( angle + Math.PI/2 ) < Math.PI/18 ){
@@ -514,7 +551,7 @@ const opMove = ( index ) => {
         left  = Math.round( magnitude * Math.sin( angle/2 + Math.PI / 2 ) );
         right = Math.round( magnitude * Math.sin( angle/2 ) );
     }
-
+*/
     setMotorSpeed( gCubes[index], left, right );
 
 }
@@ -533,7 +570,7 @@ const setMaxSpeed = ( index, speed ) => {
 }
 
 const plusMaxSpeed = ( index ) => {
-    let speed = gMaxSpeed[index] + 0.1;
+    let speed = gMaxSpeed[index] + 0.05;
     if( speed > 1.15 ){
         speed = 1.15;
     }
@@ -541,7 +578,7 @@ const plusMaxSpeed = ( index ) => {
 }
 
 const minusMaxSpeed = ( index ) => {
-    let speed = gMaxSpeed[index] - 0.1;
+    let speed = gMaxSpeed[index] - 0.05;
     if( speed < 0 ){
         speed = 0;
     }
