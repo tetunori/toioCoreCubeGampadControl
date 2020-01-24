@@ -22,7 +22,10 @@ let gGamePadIndex = undefined;
 const gCubes = [ undefined, undefined ];
 
 let gOperationModeIndexArray = [ 0, 0 ];
-const OPE_MODES_NAME_ARRAY = ['A', 'B', 'C'];
+const MODE_A = 'A';
+const MODE_B = 'B';
+const MODE_C = 'C';
+const OPE_MODES_NAME_ARRAY =  [ MODE_A, MODE_B, MODE_C ];
 
 
 // On Input
@@ -414,21 +417,28 @@ const executeCubeCommand = () => {
         const gISItem = gInputStatus[ index ];
 
         // Move/Rotation
-        if( gISItem.rotation === 1 ){
-            // rotation mode
-            opRotation( index );
-            console.log( "rotation");
-        }else if( isValidAnalogValue( gISItem.leftTrigger ) || isValidAnalogValue( gISItem.rightTrigger ) ){ 
-            opTriggerMove( index );
-            // console.log( "move." );
-        }else if( isValidAnalogValue( gISItem.xAxisMove ) || isValidAnalogValue( gISItem.yAxisMove ) ){ 
-            opMove( index );
-            // console.log( "move." );
-        }else{
-            // opNoCommand();
+        if( gOperationModeIndexArray[ index ] === 0 ) {
+            if( gISItem.rotation === 1 ){
+                // rotation mode
+                opRotation( index );
+                console.log( "rotation");
+            }else{
+                if( isValidAnalogValue( gISItem.leftTrigger ) || isValidAnalogValue( gISItem.rightTrigger ) ){ 
+                    opTriggerMove( index );
+                }else if( isValidAnalogValue( gISItem.xAxisMove ) || isValidAnalogValue( gISItem.yAxisMove ) ){ 
+                    opMove( index );
+                }
+            }
+        }else if( gOperationModeIndexArray[ index ] === 1 ) {
+
+            if( isValidAnalogValue( gISItem.yAxisMove ) ){ 
+                opStickMove( index );
+            }
+
         }
 
     }
+
 }
 
 
@@ -568,7 +578,21 @@ const opTriggerMove = ( index ) => {
     right = gMaxSpeed[ index ] * Math.round( 100 * gISItem.leftTrigger );
     left = gMaxSpeed[ index ] * Math.round( 100 * gISItem.rightTrigger );
     
-    setMotorSpeed( gCubes[index], left, right );
+    setMotorSpeed( gCubes[ index ], left, right );
+
+}
+
+// Operation for stick mode
+const opStickMove = ( index ) => {
+
+    const gISItem = gInputStatus[ index ];
+    gISItem.xAxisMove = gISItem.rotationLeftRight;
+    if( gISItem.xAxisMove * gISItem.xAxisMove + gISItem.yAxisMove * gISItem.yAxisMove > 1 ){
+        const angle = Math.atan2( gISItem.yAxisMove, gISItem.xAxisMove );
+        gISItem.xAxisMove = Math.cos( angle );
+        gISItem.yAxisMove = Math.sin( angle );
+    }
+    opMove( index );
 
 }
 
@@ -957,14 +981,14 @@ const drawStatus = ( index, context, canvas ) => {
 
     // Mode text
     let modeText = 'Op. Mode: ';
-    modeText += OPE_MODES_NAME_ARRAY[ gOperationModeIndexArray[index] ];
+    modeText += OPE_MODES_NAME_ARRAY[ gOperationModeIndexArray[ index ] ];
     let xPosMode = 2*canvas.width/3 + 12;
     let yPosMode = canvas.height/2 * ( index + 1 ) -100;
     ctx.fillText( modeText, xPosMode, yPosMode );
 
     // Max speed text
     let maxSpeedText = 'Max Speed: ';
-    maxSpeedText += Math.round( gMaxSpeed[index] * 100 );
+    maxSpeedText += Math.round( gMaxSpeed[ index ] * 100 );
     let xPosMaxSpeed = 2*canvas.width/3 + 12;
     let yPosMaxSpeed = canvas.height/2 * ( index + 1 ) - 70;
     ctx.fillText( maxSpeedText, xPosMaxSpeed, yPosMaxSpeed );
