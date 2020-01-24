@@ -251,7 +251,13 @@ const registerInput = () => {
             if( index === 0 ){ gISItem.xAxisMove = 1; }
         }else{
             if( gamePad ){
-                gISItem.xAxisMove = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
+                if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
+                    gISItem.xAxisMove = -1;
+                }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
+                    gISItem.xAxisMove = 1;
+                }else{
+                    gISItem.xAxisMove = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
+                }
             }else{
                 gISItem.xAxisMove = 0;
             }
@@ -264,7 +270,13 @@ const registerInput = () => {
             if( index === 0 ){ gISItem.yAxisMove = -1; }
         }else{
             if( gamePad ){
-                gISItem.yAxisMove = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
+                if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
+                    gISItem.yAxisMove = 1;
+                }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
+                    gISItem.yAxisMove = -1;
+                }else{
+                    gISItem.yAxisMove = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
+                }
             }else{
                 gISItem.yAxisMove = 0;
             }
@@ -274,7 +286,9 @@ const registerInput = () => {
         // Later, we should generalize this.
         if( ( Math.abs( gISItem.xAxisMove ) + Math.abs( gISItem.yAxisMove ) ) === 2 ){
             if( ( getKeyInputValue( KEYCODE_UP ) === 1  ) || 
-                    ( getKeyInputValue( KEYCODE_DOWN ) === 1  ) ){
+                ( getKeyInputValue( KEYCODE_DOWN ) === 1  ) || 
+                ( gamePad.buttons[ GAMEPAD_BT_UP ].value  ) || 
+                ( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ) ){
                 gISItem.xAxisMove /= Math.sqrt(2);
                 gISItem.yAxisMove /= Math.sqrt(2);
             }
@@ -392,7 +406,6 @@ const executeCubeCommand = () => {
             opRotation( index );
             console.log( "rotation");
         }else if( isValidAnalogValue( gISItem.xAxisMove ) || isValidAnalogValue( gISItem.yAxisMove ) ){ 
-            // Omni-direction movement mode.
             opMove( index );
             // console.log( "move." );
         }else{
@@ -471,7 +484,7 @@ const opSettings = () => {
 // Operation for Rotation around center
 const opRotation = ( index ) => {
     const gISItem = gInputStatus[ index ];
-    const unitSpeed = Math.round( gMaxSpeed[index] * 100 * gISItem.rotationLeftRight );
+    const unitSpeed = Math.round( gMaxSpeed[index] * 100 * gISItem.rotationLeftRight ) / 2;
     setMotorSpeed( gCubes[ index ], unitSpeed, -1 * unitSpeed );
 }
 
@@ -490,7 +503,7 @@ const opMove = ( index ) => {
         angle = Math.atan2( gISItem.yAxisMove, gISItem.xAxisMove );
     }
     
-    console.log( angle );
+    // console.log( angle );
     let left, right;
 
     // Forward 
@@ -526,32 +539,6 @@ const opMove = ( index ) => {
         }
     }
     
-
-    
-
-/*
-    if( ( -3 * Math.PI/4 < angle ) && ( angle < -1 * Math.PI/4 ) ){
-        // Backward
-        if( Math.abs( angle + Math.PI/2 ) < Math.PI/18 ){
-            angle = -1 * Math.PI/2;
-        }
-        left  = Math.round( magnitude * Math.sin( angle/2 - Math.PI / 2 ) );
-        right = Math.round( magnitude * Math.sin( angle/2) );
-    }else if( ( -1 * Math.PI/4  < angle ) && ( angle < 0 ) ){
-        left  = Math.round( magnitude * Math.sin( Math.PI / 2 ) );
-        right = Math.round( magnitude * Math.sin( 0 ) );
-    }else if( ( -1 * Math.PI < angle ) && ( angle < -3 * Math.PI/4 ) ){
-        left  = Math.round( magnitude * Math.sin( Math.PI ) );
-        right = Math.round( magnitude * Math.sin( Math.PI / 2 ) );
-    }else{
-        // Forward 
-        if( Math.abs( angle - Math.PI/2 ) < Math.PI/18 ){
-            angle = Math.PI/2;
-        }
-        left  = Math.round( magnitude * Math.sin( angle/2 + Math.PI / 2 ) );
-        right = Math.round( magnitude * Math.sin( angle/2 ) );
-    }
-*/
     setMotorSpeed( gCubes[index], left, right );
 
 }
