@@ -431,6 +431,12 @@ const executeCubeCommand = () => {
             }
         }else if( gOperationModeIndexArray[ index ] === 1 ) {
 
+            if( isValidAnalogValue( gISItem.leftTrigger ) ){ 
+                gISItem.yAxisMove = gISItem.leftTrigger;
+            }else if( isValidAnalogValue( gISItem.rightTrigger ) ){ 
+                gISItem.yAxisMove = -1 * gISItem.rightTrigger;
+            }
+             
             if( isValidAnalogValue( gISItem.yAxisMove ) ){ 
                 opStickMove( index );
             }
