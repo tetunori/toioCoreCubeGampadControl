@@ -192,6 +192,8 @@ const gInputStatus = [{
     connectCube1:0.0,
     connectCube2:0.0,
     analogMoveDisable:0.0,
+    leftTrigger:0.0,
+    rightTrigger:0.0,
 }, {
     xAxisMove:0.0,
     yAxisMove:0.0,
@@ -211,8 +213,9 @@ const gInputStatus = [{
     connectCube1:0.0,
     connectCube2:0.0,
     analogMoveDisable:0.0,
-}
-]
+    leftTrigger:0.0,
+    rightTrigger:0.0,
+}];
 
 
 // Register into InputStatus
@@ -234,6 +237,7 @@ const registerInput = () => {
         const GAMEPAD_BT_L1     =  4; // L1 button, L button
         const GAMEPAD_BT_R1     =  5; // R1 button, R button
         const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
+        const GAMEPAD_BT_R2     =  7; // R2 trigger, ZR button 
         const GAMEPAD_BT_8      =  8; // Share button, - button
         const GAMEPAD_BT_9      =  9; // Option button, + button
         const GAMEPAD_BT_UP     = 12;
@@ -349,6 +353,15 @@ const registerInput = () => {
             gISItem.analogMoveDisable = 0;
         }
 
+        // Left/Right trigger
+        if( gamePad ){
+            gISItem.leftTrigger = gamePad.buttons[ GAMEPAD_BT_L2 ].value;
+            gISItem.rightTrigger = gamePad.buttons[ GAMEPAD_BT_R2 ].value;
+        }else{
+            gISItem.leftTrigger = 0;
+            gISItem.rightTrigger = 0;
+        }
+
     }
 
 }
@@ -405,6 +418,9 @@ const executeCubeCommand = () => {
             // rotation mode
             opRotation( index );
             console.log( "rotation");
+        }else if( isValidAnalogValue( gISItem.leftTrigger ) || isValidAnalogValue( gISItem.rightTrigger ) ){ 
+            opTriggerMove( index );
+            // console.log( "move." );
         }else if( isValidAnalogValue( gISItem.xAxisMove ) || isValidAnalogValue( gISItem.yAxisMove ) ){ 
             opMove( index );
             // console.log( "move." );
@@ -489,7 +505,7 @@ const opRotation = ( index ) => {
 }
 
 
-// Operation for omni-direction move
+// Operation for normal move
 const opMove = ( index ) => {
 
     const gISItem = gInputStatus[ index ];
@@ -542,6 +558,20 @@ const opMove = ( index ) => {
     setMotorSpeed( gCubes[index], left, right );
 
 }
+
+// Operation for trigger move
+const opTriggerMove = ( index ) => {
+
+    const gISItem = gInputStatus[ index ];
+
+    // Dare to set left/rigth reversed.
+    right = gMaxSpeed[ index ] * Math.round( 100 * gISItem.leftTrigger );
+    left = gMaxSpeed[ index ] * Math.round( 100 * gISItem.rightTrigger );
+    
+    setMotorSpeed( gCubes[index], left, right );
+
+}
+
 
 // Operation for no command
 const opNoCommand = () => {
