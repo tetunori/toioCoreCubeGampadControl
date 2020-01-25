@@ -245,6 +245,8 @@ const procKeyDown = ( code ) => {
 const gInputStatus = [{
     xAxisLeft:0.0,
     yAxisLeft:0.0,
+    xAxisLeftBeforeAdjust:undefined,
+    yAxisLeftBeforeAdjust:undefined,
     xAxisRight:0.0,
     yAxisRight:0.0,
     maxSpeed:0.0,
@@ -261,6 +263,8 @@ const gInputStatus = [{
 }, {
     xAxisLeft:0.0,
     yAxisLeft:0.0,
+    xAxisLeftBeforeAdjust:undefined,
+    yAxisLeftBeforeAdjust:undefined,
     xAxisRight:0.0,
     yAxisRight:0.0,
     maxSpeed:0.0,
@@ -364,8 +368,13 @@ const registerInput = () => {
         // Adjust output value outside of the circle for left analog stick.
         if( Math.pow( gISItem.xAxisLeft, 2 ) + Math.pow( gISItem.yAxisLeft, 2 ) > 1 ){
             const angle = Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft );
+            gISItem.xAxisLeftBeforeAdjust = gISItem.xAxisLeft;
+            gISItem.yAxisLeftBeforeAdjust = gISItem.yAxisLeft;
             gISItem.xAxisLeft = Math.cos( angle );
             gISItem.yAxisLeft = Math.sin( angle );
+        }else{
+            gISItem.xAxisLeftBeforeAdjust = undefined;
+            gISItem.yAxisLeftBeforeAdjust = undefined;
         }
 
         if( gamePad ){
@@ -955,13 +964,28 @@ const drawAnalogState = ( offsetX, offsetY, index, context, canvas, isLeft ) => 
     ctx.beginPath();
     const RADIUS = 5;
     const gISItem = gInputStatus[ index ];
-    let xAxis, yAxis;
+    let xAxis = 0, yAxis = 0;
+
     if( isLeft ){
-        xAxis = gISItem.xAxisLeft;
-        yAxis = gISItem.yAxisLeft;
+        if( gOperationModeIndexArray[ index ] === 0 ){
+            xAxis = gISItem.xAxisLeft;
+        }
+
+        if( gISItem.yAxisLeftBeforeAdjust !== undefined ){
+            yAxis = gISItem.yAxisLeftBeforeAdjust;
+        }else{
+            yAxis = gISItem.yAxisLeft;
+        }
     }else{
-        xAxis = gISItem.xAxisRight;
-        yAxis = gISItem.yAxisRight;
+        if( gOperationModeIndexArray[ index ] === 0 ){
+            yAxis = gISItem.yAxisRight;
+        }
+
+        if( gISItem.xAxisLeftBeforeAdjust !== undefined ){
+            xAxis = gISItem.xAxisLeftBeforeAdjust;
+        }else{
+            xAxis = gISItem.xAxisRight;
+        }
     }
 
     ctx.arc( canvas.width/3 - SQUARE_SIZE / 2  + offsetX + xAxis * SQUARE_SIZE / 2, 
@@ -971,6 +995,24 @@ const drawAnalogState = ( offsetX, offsetY, index, context, canvas, isLeft ) => 
     ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )";
     ctx.fill();
     ctx.closePath();
+
+    // Gray out
+    if( gOperationModeIndexArray[ index ] === 1 ){
+        if( isLeft ){        
+            ctx.fillStyle = "rgba( 0, 0, 0, 0.3 )" ;
+            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
+                SQUARE_SIZE * 2 / 5, SQUARE_SIZE );
+            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX + SQUARE_SIZE * 3 / 5, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
+                SQUARE_SIZE * 2 / 5, SQUARE_SIZE );
+        }else{
+            ctx.fillStyle = "rgba( 0, 0, 0, 0.3 )" ;
+            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
+                SQUARE_SIZE, SQUARE_SIZE * 2 / 5 );
+            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET + SQUARE_SIZE * 3 / 5, 
+                SQUARE_SIZE, SQUARE_SIZE * 2 / 5 );
+        }
+    }
+    
 
     ctx.restore();
 
