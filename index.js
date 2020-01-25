@@ -165,6 +165,7 @@ const selectGamePad = () => {
                     if( currentTime - gCubeControlModeTime.start > HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC ){
                         // Button hold for a long time enough
                         console.log( 'Button hold.' );
+                        resetAll();
                         gCubeControlModeTime.start = 0;
                         gCubeControlMode = CUBE_CONTROL_MODE_DOUBLE;
 
@@ -223,7 +224,7 @@ const procKeyDown = ( code ) => {
     if( code === KEYCODE_Q ){
         exchangeCubes();
     }else if( code === KEYCODE_ESC ){
-        reset(0); reset(1);
+        allReset();
     }else if( code === KEYCODE_PLUS ){
         plusMaxSpeed();
     }else if( code === KEYCODE_MINUS ){
@@ -327,27 +328,26 @@ const registerInput = () => {
             if( index === 0 ){ gISItem.yAxisLeft = -1; }
         }else{
             if( gamePad ){
-                if( gOperationModeIndexArray[ index ] === 0 ){
 
-                    if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
-                        gISItem.yAxisLeft = 1;
-                    }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
-                        gISItem.yAxisLeft = -1;
-                    }else{
-                        gISItem.yAxisLeft = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
-                    }
-                    
+                
+
+                if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
+                    gISItem.yAxisLeft = 1;
+                }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
+                    gISItem.yAxisLeft = -1;
                 }else{
 
-                    if( isValidAnalogValue( gISItem.leftTrigger ) ){ 
-                        gISItem.yAxisLeft = gISItem.leftTrigger;
-                    }else if( isValidAnalogValue( gISItem.rightTrigger ) ){ 
-                        gISItem.yAxisLeft = -1 * gISItem.rightTrigger;
-                    }else{
-                        gISItem.yAxisLeft = 0;
+                    gISItem.yAxisLeft = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
+                    if( gOperationModeIndexArray[ index ] === 1 ){
+                        if( isValidAnalogValue( gamePad.buttons[ GAMEPAD_BT_L2 ].value ) ){ 
+                            gISItem.yAxisLeft = gamePad.buttons[ GAMEPAD_BT_L2 ].value;
+                        }else if( isValidAnalogValue( gamePad.buttons[ GAMEPAD_BT_R2 ].value ) ){ 
+                            gISItem.yAxisLeft = -1 * gamePad.buttons[ GAMEPAD_BT_R2 ].value;
+                        }
                     }
 
                 }
+
             }else{
                 gISItem.yAxisLeft = 0;
             }
@@ -742,7 +742,8 @@ const switchOperationMode = ( index ) => {
 
 const lightHeadCube = () => { turnOnLightWhiteBriefly( gCubes[0] ); }
 
-const reset = ( index ) => { setMaxSpeed( index, DEFAULT_SPEED ); }
+const reset = ( index ) => { setMaxSpeed( index, DEFAULT_SPEED ); gOperationModeIndexArray[index] = 0; }
+const resetAll = () => { reset(0); reset(1); }
 
 const isValidAnalogValue = ( value ) => {
 
