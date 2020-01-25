@@ -509,25 +509,18 @@ const executeSingleCubeCommand = () => {
 
 const executeDoubleCubeCommand = () => {
 
-    // console.log( 'executeDoubleCubeCommand is called.' );
-    
-    const GAMEPAD_LEFT_AXIS_X = 0;
-    const GAMEPAD_LEFT_AXIS_Y = 1;
-    const GAMEPAD_RIGHT_AXIS_X = 2;
-    const GAMEPAD_RIGHT_AXIS_Y = 3;
-
     const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ 0 ] ];
     const gISItem_0 = gInputStatus[ 0 ];
 
     if( gamepad ){
+
         if( isValidAnalogValue( gISItem_0.xAxisLeft ) || isValidAnalogValue( gISItem_0.yAxisLeft ) ){ 
             opMove( 0, 0 );
         }
-    
-        if( isValidAnalogValue( gamepad.axes[ GAMEPAD_RIGHT_AXIS_X ] ) || isValidAnalogValue( gamepad.axes[ GAMEPAD_RIGHT_AXIS_Y ] ) ){ 
-            gISItem_0.xAxisLeft = gamepad.axes[ GAMEPAD_RIGHT_AXIS_X ];
-            gISItem_0.yAxisLeft = -1 * gamepad.axes[ GAMEPAD_RIGHT_AXIS_Y ];
-            // Todo: actoin buttons
+
+        if( isValidAnalogValue( gISItem_0.xAxisRight ) || isValidAnalogValue( gISItem_0.yAxisRight ) ){ 
+            gISItem_0.xAxisLeft = gISItem_0.xAxisRight;
+            gISItem_0.yAxisLeft = gISItem_0.yAxisRight;
             opMove( 1, 0 );
         }
 
