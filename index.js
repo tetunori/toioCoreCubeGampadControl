@@ -143,6 +143,7 @@ const selectGamePad = () => {
 
                     vibrateGamePad( gamePad );
                     gGamePadIndex = item;
+                    gCubeControlMode = CUBE_CONTROL_MODE_SINGLE;
                     // console.log( gamePad );
                     // console.log( "gGamePadIndex: " + gGamePadIndex );
                     // console.log( gCurrentGamePadIndices );
@@ -163,6 +164,7 @@ const selectGamePad = () => {
                         // Button hold for a long time enough
                         console.log( 'Button hold.' );
                         gCubeControlModeTime.start = 0;
+                        gCubeControlMode = CUBE_CONTROL_MODE_DOUBLE;
 
 
                         if( gCurrentGamePadIndices[0] !== item ){
@@ -464,6 +466,14 @@ const updateStatus = () => {
 }
 
 const executeCubeCommand = () => {
+    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
+        executeSingleCubeCommand();
+    }else{
+        executeDoubleCubeCommand();
+    }
+}
+
+const executeSingleCubeCommand = () => {
 
     for( let index of [ 0, 1 ] ){
         
@@ -479,7 +489,7 @@ const executeCubeCommand = () => {
                 if( isValidAnalogValue( gISItem.leftTrigger ) || isValidAnalogValue( gISItem.rightTrigger ) ){ 
                     opTriggerMove( index );
                 }else if( isValidAnalogValue( gISItem.xAxisMove ) || isValidAnalogValue( gISItem.yAxisMove ) ){ 
-                    opMove( index );
+                    opMove( index, index );
                 }
             }
         }else if( gOperationModeIndexArray[ index ] === 1 ) {
@@ -499,6 +509,35 @@ const executeCubeCommand = () => {
     }
 
 }
+
+const executeDoubleCubeCommand = () => {
+
+    // console.log( 'executeDoubleCubeCommand is called.' );
+    
+    const GAMEPAD_LEFT_AXIS_X = 0;
+    const GAMEPAD_LEFT_AXIS_Y = 1;
+    const GAMEPAD_RIGHT_AXIS_X = 2;
+    const GAMEPAD_RIGHT_AXIS_Y = 3;
+
+    const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ 0 ] ];
+    const gISItem_0 = gInputStatus[ 0 ];
+
+    if( gamepad ){
+        if( isValidAnalogValue( gISItem_0.xAxisMove ) || isValidAnalogValue( gISItem_0.yAxisMove ) ){ 
+            opMove( 0, 0 );
+        }
+    
+        if( isValidAnalogValue( gamepad.axes[ GAMEPAD_RIGHT_AXIS_X ] ) || isValidAnalogValue( gamepad.axes[ GAMEPAD_RIGHT_AXIS_Y ] ) ){ 
+            gISItem_0.xAxisMove = gamepad.axes[ GAMEPAD_RIGHT_AXIS_X ];
+            gISItem_0.yAxisMove = -1 * gamepad.axes[ GAMEPAD_RIGHT_AXIS_Y ];
+            console.log('tse');
+            opMove( 1, 0 );
+        }
+
+    }
+    
+}
+
 
 
 // Operations
@@ -575,10 +614,10 @@ const opRotation = ( index ) => {
 
 
 // Operation for normal move
-const opMove = ( index ) => {
+const opMove = ( cubeIndex, gamePadIndex ) => {
 
-    const gISItem = gInputStatus[ index ];
-    const magnitude = gMaxSpeed[index] * 100 * Math.sqrt( gISItem.xAxisMove * gISItem.xAxisMove + gISItem.yAxisMove * gISItem.yAxisMove );
+    const gISItem = gInputStatus[ gamePadIndex ];
+    const magnitude = gMaxSpeed[ gamePadIndex ] * 100 * Math.sqrt( gISItem.xAxisMove * gISItem.xAxisMove + gISItem.yAxisMove * gISItem.yAxisMove );
     // console.log( magnitude );
 
     let angle;
@@ -624,7 +663,7 @@ const opMove = ( index ) => {
         }
     }
     
-    setMotorSpeed( gCubes[index], left, right );
+    setMotorSpeed( gCubes[ cubeIndex ], left, right );
 
 }
 
@@ -651,7 +690,7 @@ const opStickMove = ( index ) => {
         gISItem.xAxisMove = Math.cos( angle );
         gISItem.yAxisMove = Math.sin( angle );
     }
-    opMove( index );
+    opMove( index, index );
 
 }
 
