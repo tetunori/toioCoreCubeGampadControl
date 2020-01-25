@@ -141,7 +141,7 @@ const selectGamePad = () => {
 
                     }
 
-                    vibrateGamePad( gamePad );
+                    vibrateGamePad( gamePad, gCurrentGamePadIndices[0] !== item );
                     gGamePadIndex = item;
                     gCubeControlMode = CUBE_CONTROL_MODE_SINGLE;
                     // console.log( gamePad );
@@ -191,7 +191,18 @@ const selectGamePad = () => {
     
 }
 
-const vibrateGamePad = ( gamePad ) => {
+const vibrateGamePad = ( gamePad, isTwice ) => {
+
+    const INTERVAL = 200; // msec
+
+    vibrateGamePadOnce( gamePad );
+    if( isTwice ){
+        setTimeout( () => { vibrateGamePadOnce( gamePad ); }, INTERVAL );
+    }
+
+}
+
+const vibrateGamePadOnce = ( gamePad ) => {
 
     if ( gamePad.vibrationActuator ) {
         gamePad.vibrationActuator.playEffect( "dual-rumble", { 
