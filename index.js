@@ -32,10 +32,7 @@ const CUBE_CONTROL_MODE_SINGLE = 0;
 const CUBE_CONTROL_MODE_DOUBLE = 1;
 let gCubeControlMode = CUBE_CONTROL_MODE_SINGLE;
 const HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC = 500;
-let gCubeControlModeTime = { 
-    start: undefined, 
-    left: HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC,
-};
+let gCubeControlModeStartTime = [ undefined, undefined ];
 
 // On Input
 // Gamepad Listner
@@ -157,18 +154,17 @@ const selectGamePad = () => {
             // Cube control mode
             if( currentButtonStatus === 1 ){
                 let currentTime = ( new Date() ).getTime();
-                if( gCubeControlModeTime.start === 0 ){
+                if( gCubeControlModeStartTime[ item ] === 0 ){
                     // no operatoin.
-                }else if( gCubeControlModeTime.start === undefined ){
-                    gCubeControlModeTime.start = currentTime;
+                }else if( gCubeControlModeStartTime[ item ] === undefined ){
+                    gCubeControlModeStartTime[ item ] = currentTime;
                 }else{
-                    if( currentTime - gCubeControlModeTime.start > HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC ){
+                    if( currentTime - gCubeControlModeStartTime[ item ] > HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC ){
                         // Button hold for a long time enough
                         console.log( 'Button hold.' );
                         resetAll();
-                        gCubeControlModeTime.start = 0;
+                        gCubeControlModeStartTime[ item ] = 0;
                         gCubeControlMode = CUBE_CONTROL_MODE_DOUBLE;
-
 
                         if( gCurrentGamePadIndices[0] !== item ){
 
@@ -187,7 +183,7 @@ const selectGamePad = () => {
                     }
                 }
             }else{
-                gCubeControlModeTime.start = undefined;
+                gCubeControlModeStartTime[ item ] = undefined;
             }
         }
     }
