@@ -3,6 +3,8 @@
 const DEFAULT_SPEED = 0.6;
 let gMaxSpeed = [ DEFAULT_SPEED, DEFAULT_SPEED ];
 
+const CUBE_SPEC_MAX_SPEED = 115;
+
 let gRotationPoint = undefined;
 const ROTATION_CENTER      = 0;
 const ROTATION_HEAD        = 1;
@@ -232,16 +234,11 @@ const procKeyDown = ( code ) => {
 
 // Key/gamepad Input Status
 const gInputStatus = [{
-    xAxisMove:0.0,
-    yAxisMove:0.0,
-    rotationLeftRight:0.0,
-    rotation:0.0,
-    headRotation:0.0,
-    tailRotation:0.0,
-    leftWheelRotation:0.0,
-    rightWheelRotation:0.0,
+    xAxisLeft:0.0,
+    yAxisLeft:0.0,
+    xAxisRight:0.0,
+    yAxisRight:0.0,
     maxSpeed:0.0,
-    changeMaxSpeed:0.0,
     switchOperationMode:0.0,
     exchangeCubes:0.0,
     reset:0.0,
@@ -253,16 +250,11 @@ const gInputStatus = [{
     leftTrigger:0.0,
     rightTrigger:0.0,
 }, {
-    xAxisMove:0.0,
-    yAxisMove:0.0,
-    rotationLeftRight:0.0,
-    rotation:0.0,
-    headRotation:0.0,
-    tailRotation:0.0,
-    leftWheelRotation:0.0,
-    rightWheelRotation:0.0,
+    xAxisLeft:0.0,
+    yAxisLeft:0.0,
+    xAxisRight:0.0,
+    yAxisRight:0.0,
     maxSpeed:0.0,
-    changeMaxSpeed:0.0,
     switchOperationMode:0.0,
     exchangeCubes:0.0,
     reset:0.0,
@@ -279,149 +271,142 @@ const gInputStatus = [{
 // Register into InputStatus
 const registerInput = () => {
 
+    const GAMEPAD_LEFT_AXIS_X  = 0;
+    const GAMEPAD_LEFT_AXIS_Y  = 1;
+    const GAMEPAD_RIGHT_AXIS_X = 2;
+    const GAMEPAD_RIGHT_AXIS_Y = 3;
+
+    const GAMEPAD_BT_0      =  0; // CROSS button, B button 
+    const GAMEPAD_BT_1      =  1; // CIRCLE button, A button
+    const GAMEPAD_BT_2      =  2; // SQUARE button, Y button
+    const GAMEPAD_BT_3      =  3; // TRIANGLE button, X button
+    const GAMEPAD_BT_L1     =  4; // L1 button, L button
+    const GAMEPAD_BT_R1     =  5; // R1 button, R button
+    const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
+    const GAMEPAD_BT_R2     =  7; // R2 trigger, ZR button 
+    const GAMEPAD_BT_8      =  8; // Share button, - button
+    const GAMEPAD_BT_9      =  9; // Option button, + button
+    const GAMEPAD_BT_UP     = 12;
+    const GAMEPAD_BT_DOWN   = 13;
+    const GAMEPAD_BT_LEFT   = 14;
+    const GAMEPAD_BT_RIGHT  = 15;
+    const GAMEPAD_BT_HOME   = 16; // PS button / Home button
+
     for( let index of [ 0, 1 ] ){
 
         const gamePad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
-
-        const GAMEPAD_LEFT_AXIS_X  = 0;
-        const GAMEPAD_LEFT_AXIS_Y  = 1;
-        const GAMEPAD_RIGHT_AXIS_X = 2;
-        const GAMEPAD_RIGHT_AXIS_Y = 3;
-
-        const GAMEPAD_BT_0      =  0; // CROSS button, B button 
-        const GAMEPAD_BT_1      =  1; // CIRCLE button, A button
-        const GAMEPAD_BT_2      =  2; // SQUARE button, Y button
-        const GAMEPAD_BT_3      =  3; // TRIANGLE button, X button
-        const GAMEPAD_BT_L1     =  4; // L1 button, L button
-        const GAMEPAD_BT_R1     =  5; // R1 button, R button
-        const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
-        const GAMEPAD_BT_R2     =  7; // R2 trigger, ZR button 
-        const GAMEPAD_BT_8      =  8; // Share button, - button
-        const GAMEPAD_BT_9      =  9; // Option button, + button
-        const GAMEPAD_BT_UP     = 12;
-        const GAMEPAD_BT_DOWN   = 13;
-        const GAMEPAD_BT_LEFT   = 14;
-        const GAMEPAD_BT_RIGHT  = 15;
-        const GAMEPAD_BT_HOME   = 16; // PS button / Home button
-
         const gISItem = gInputStatus[ index ];
 
-        // Move: X Axis ( Analog Stick mapping )
-        if( getKeyInputValue( KEYCODE_LEFT ) === 1 ){
-            if( index === 0 ){ gISItem.xAxisMove = -1; }
-        }else if( getKeyInputValue( KEYCODE_RIGHT ) === 1 ){
-            if( index === 0 ){ gISItem.xAxisMove = 1; }
+        // X Axis of Left Analog Stick.
+        if( getKeyInputValue( KEYCODE_LEFT ) ){
+            if( index === 0 ){ gISItem.xAxisLeft = -1; }
+        }else if( getKeyInputValue( KEYCODE_RIGHT ) ){
+            if( index === 0 ){ gISItem.xAxisLeft = 1; }
         }else{
             if( gamePad ){
                 if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
-                    gISItem.xAxisMove = -1;
+                    gISItem.xAxisLeft = -1;
                 }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
-                    gISItem.xAxisMove = 1;
+                    gISItem.xAxisLeft = 1;
                 }else{
-                    gISItem.xAxisMove = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
+                    gISItem.xAxisLeft = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
                 }
             }else{
-                gISItem.xAxisMove = 0;
+                gISItem.xAxisLeft = 0;
             }
         }
         
-        // Move: Y Axis ( Analog Stick mapping )
-        if( getKeyInputValue( KEYCODE_UP ) === 1 ){
-            if( index === 0 ){ gISItem.yAxisMove = 1; }
-        }else if( getKeyInputValue( KEYCODE_DOWN ) === 1 ){
-            if( index === 0 ){ gISItem.yAxisMove = -1; }
+        // Y Axis of Left Analog Stick.
+        if( getKeyInputValue( KEYCODE_UP ) ){
+            if( index === 0 ){ gISItem.yAxisLeft = 1; }
+        }else if( getKeyInputValue( KEYCODE_DOWN ) ){
+            if( index === 0 ){ gISItem.yAxisLeft = -1; }
         }else{
             if( gamePad ){
                 if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
-                    gISItem.yAxisMove = 1;
+                    gISItem.yAxisLeft = 1;
                 }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
-                    gISItem.yAxisMove = -1;
+                    gISItem.yAxisLeft = -1;
                 }else{
-                    gISItem.yAxisMove = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
+                    gISItem.yAxisLeft = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
                 }
             }else{
-                gISItem.yAxisMove = 0;
+                gISItem.yAxisLeft = 0;
             }
         }
 
-        // Set output value on the circle for a diagonal position such as Up-left. 
-        // Later, we should generalize this.
-        if( ( Math.abs( gISItem.xAxisMove ) + Math.abs( gISItem.yAxisMove ) ) === 2 ){
-            if( ( getKeyInputValue( KEYCODE_UP ) === 1  ) || 
-                ( getKeyInputValue( KEYCODE_DOWN ) === 1  ) || 
-                ( gamePad.buttons[ GAMEPAD_BT_UP ].value  ) || 
-                ( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ) ){
-                gISItem.xAxisMove /= Math.sqrt(2);
-                gISItem.yAxisMove /= Math.sqrt(2);
-            }
+        // Adjust output value outside of the circle for left analog stick.
+        if( Math.pow( gISItem.xAxisLeft, 2 ) + Math.pow( gISItem.yAxisLeft, 2 ) > 1 ){
+            const angle = Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft );
+            gISItem.xAxisLeft = Math.cos( angle );
+            gISItem.yAxisLeft = Math.sin( angle );
         }
-        
-        // Rotation left/right key, right analog stick 
+
         if( gamePad ){
-            if( isValidAnalogValue( gamePad.axes[ GAMEPAD_RIGHT_AXIS_X ] ) ){
-                gISItem.rotation = 1;
+
+            // X Axis of Right Analog Stick.
+            if( gamePad.buttons[ GAMEPAD_BT_2 ].value ){
+                gISItem.xAxisRight = -1;
+            }else if( gamePad.buttons[ GAMEPAD_BT_1 ].value ){
+                gISItem.xAxisRight = 1;
             }else{
-                gISItem.rotation = 0;
+                gISItem.xAxisRight = gamePad.axes[ GAMEPAD_RIGHT_AXIS_X ];
             }
-            gISItem.rotationLeftRight = gamePad.axes[ GAMEPAD_RIGHT_AXIS_X ];
-        }else{
-            gISItem.rotationLeftRight = 0;
-        }
 
-        // Speed lever / Change button
-        if( gamePad ){
-            gISItem.changeMaxSpeed = gamePad.buttons[ GAMEPAD_BT_1 ].value;
-            gISItem.maxSpeed = gamePad.buttons[ GAMEPAD_BT_L2 ].value * 115 / 100;
-        }
+            // Y Axis of Right Analog Stick.
+            if( gamePad.buttons[ GAMEPAD_BT_3 ].value ){
+                gISItem.yAxisRight = 1;
+            }else if( gamePad.buttons[ GAMEPAD_BT_0 ].value ){
+                gISItem.yAxisRight = -1;
+            }else{
+                gISItem.yAxisRight = -1 * gamePad.axes[ GAMEPAD_RIGHT_AXIS_Y ];
+            }
+            
+            // Adjust output value outside of the circle for right analog stick.
+            if( Math.pow( gISItem.xAxisRight, 2 ) + Math.pow( gISItem.yAxisRight, 2 ) > 1 ){
+                const angle = Math.atan2( gISItem.yAxisRight, gISItem.xAxisRight );
+                gISItem.xAxisRight = Math.cos( angle );
+                gISItem.yAxisRight = Math.sin( angle );
+            }
 
-        // Exchange Cube1/Cube2 button
-        if( gamePad ){ 
+            // Speed lever / Change button
+            gISItem.maxSpeed = CUBE_SPEC_MAX_SPEED * gamePad.buttons[ GAMEPAD_BT_L2 ].value / 100;
+
+            // Exchange Cube1/Cube2 button
             gISItem.exchangeCubes = gamePad.buttons[ GAMEPAD_BT_9 ].value; 
-        }else{
-            gISItem.exchangeCubes = 0;
-        }
 
-        // Switch Operation mode button
-        if( gamePad ){ 
+            // Switch Operation mode button
             gISItem.switchOperationMode = gamePad.buttons[ GAMEPAD_BT_8 ].value; 
-        }else{
-            gISItem.switchOperationMode = 0;
-        }
 
-        // Reset button
-        if( gamePad ){
+            // Reset button
             gISItem.reset = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
-        }else{
-            gISItem.reset = 0;
-        }
 
-        // Speed Plus/Minus setting
-        if( gamePad ){
+            // Speed Plus/Minus setting
             gISItem.minusMaxSpeed = gamePad.buttons[ GAMEPAD_BT_L1 ].value;
             gISItem.plusMaxSpeed  = gamePad.buttons[ GAMEPAD_BT_R1 ].value;
-        }else{
-            gISItem.minusMaxSpeed = 0;
-            gISItem.plusMaxSpeed = 0;
-        }
 
-        // Analog Omni-direction movement
-        if( gamePad ){
+            // Analog Omni-direction movement
             gISItem.analogMoveDisable = gamePad.buttons[ GAMEPAD_BT_0 ].value;
-        }else{
-            gISItem.analogMoveDisable = 0;
-        }
 
-        // Left/Right trigger
-        if( gamePad ){
+            // Left/Right trigger
             gISItem.leftTrigger = gamePad.buttons[ GAMEPAD_BT_L2 ].value;
             gISItem.rightTrigger = gamePad.buttons[ GAMEPAD_BT_R2 ].value;
+
         }else{
+
+            gISItem.xAxisRight = 0;
+            gISItem.yAxisRight = 0;
+            gISItem.exchangeCubes = 0;
+            gISItem.switchOperationMode = 0;
+            gISItem.reset = 0;
+            gISItem.minusMaxSpeed = 0;
+            gISItem.plusMaxSpeed = 0;
+            gISItem.analogMoveDisable = 0;
             gISItem.leftTrigger = 0;
             gISItem.rightTrigger = 0;
+
         }
-
     }
-
 }
 
 
@@ -481,26 +466,26 @@ const executeSingleCubeCommand = () => {
 
         // Move/Rotation
         if( gOperationModeIndexArray[ index ] === 0 ) {
-            if( gISItem.rotation === 1 ){
+            if( isValidAnalogValue( gISItem.xAxisRight ) ){
                 // rotation mode
                 opRotation( index );
                 // console.log( "rotation");
             }else{
                 if( isValidAnalogValue( gISItem.leftTrigger ) || isValidAnalogValue( gISItem.rightTrigger ) ){ 
                     opTriggerMove( index );
-                }else if( isValidAnalogValue( gISItem.xAxisMove ) || isValidAnalogValue( gISItem.yAxisMove ) ){ 
+                }else if( isValidAnalogValue( gISItem.xAxisLeft ) || isValidAnalogValue( gISItem.yAxisLeft ) ){ 
                     opMove( index, index );
                 }
             }
         }else if( gOperationModeIndexArray[ index ] === 1 ) {
 
             if( isValidAnalogValue( gISItem.leftTrigger ) ){ 
-                gISItem.yAxisMove = gISItem.leftTrigger;
+                gISItem.yAxisLeft = gISItem.leftTrigger;
             }else if( isValidAnalogValue( gISItem.rightTrigger ) ){ 
-                gISItem.yAxisMove = -1 * gISItem.rightTrigger;
+                gISItem.yAxisLeft = -1 * gISItem.rightTrigger;
             }
              
-            if( isValidAnalogValue( gISItem.yAxisMove ) ){ 
+            if( isValidAnalogValue( gISItem.yAxisLeft ) ){ 
                 opStickMove( index );
             }
 
@@ -523,14 +508,14 @@ const executeDoubleCubeCommand = () => {
     const gISItem_0 = gInputStatus[ 0 ];
 
     if( gamepad ){
-        if( isValidAnalogValue( gISItem_0.xAxisMove ) || isValidAnalogValue( gISItem_0.yAxisMove ) ){ 
+        if( isValidAnalogValue( gISItem_0.xAxisLeft ) || isValidAnalogValue( gISItem_0.yAxisLeft ) ){ 
             opMove( 0, 0 );
         }
     
         if( isValidAnalogValue( gamepad.axes[ GAMEPAD_RIGHT_AXIS_X ] ) || isValidAnalogValue( gamepad.axes[ GAMEPAD_RIGHT_AXIS_Y ] ) ){ 
-            gISItem_0.xAxisMove = gamepad.axes[ GAMEPAD_RIGHT_AXIS_X ];
-            gISItem_0.yAxisMove = -1 * gamepad.axes[ GAMEPAD_RIGHT_AXIS_Y ];
-            console.log('tse');
+            gISItem_0.xAxisLeft = gamepad.axes[ GAMEPAD_RIGHT_AXIS_X ];
+            gISItem_0.yAxisLeft = -1 * gamepad.axes[ GAMEPAD_RIGHT_AXIS_Y ];
+            // Todo: actoin buttons
             opMove( 1, 0 );
         }
 
@@ -608,7 +593,7 @@ const opSettings = () => {
 // Operation for Rotation around center
 const opRotation = ( index ) => {
     const gISItem = gInputStatus[ index ];
-    const unitSpeed = Math.round( gMaxSpeed[index] * 100 * gISItem.rotationLeftRight ) / 2;
+    const unitSpeed = Math.round( gMaxSpeed[index] * 100 * gISItem.xAxisRight ) / 2;
     setMotorSpeed( gCubes[ index ], unitSpeed, -1 * unitSpeed );
 }
 
@@ -617,14 +602,14 @@ const opRotation = ( index ) => {
 const opMove = ( cubeIndex, gamePadIndex ) => {
 
     const gISItem = gInputStatus[ gamePadIndex ];
-    const magnitude = gMaxSpeed[ gamePadIndex ] * 100 * Math.sqrt( gISItem.xAxisMove * gISItem.xAxisMove + gISItem.yAxisMove * gISItem.yAxisMove );
+    const magnitude = gMaxSpeed[ gamePadIndex ] * 100 * Math.sqrt( gISItem.xAxisLeft * gISItem.xAxisLeft + gISItem.yAxisLeft * gISItem.yAxisLeft );
     // console.log( magnitude );
 
     let angle;
     if( gISItem.analogMoveDisable === 1 ){
-        angle = Math.round( 4 * Math.atan2( gISItem.yAxisMove, gISItem.xAxisMove) / Math.PI ) * Math.PI/4;
+        angle = Math.round( 4 * Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft) / Math.PI ) * Math.PI/4;
     }else{
-        angle = Math.atan2( gISItem.yAxisMove, gISItem.xAxisMove );
+        angle = Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft );
     }
     
     // console.log( angle );
@@ -647,17 +632,17 @@ const opMove = ( cubeIndex, gamePadIndex ) => {
         if( Math.cos( angle ) >= 0 ){
             if( Math.sin( angle ) >= 0 ){
                 left  = Math.round( magnitude );
-                right = Math.round( magnitude * gISItem.yAxisMove );
+                right = Math.round( magnitude * gISItem.yAxisLeft );
             }else{
                 left  = -1 * Math.round( magnitude );
-                right = Math.round( magnitude * gISItem.yAxisMove );
+                right = Math.round( magnitude * gISItem.yAxisLeft );
             }
         }else{
             if( Math.sin( angle ) >= 0 ){
-                left  = Math.round( magnitude * gISItem.yAxisMove );
+                left  = Math.round( magnitude * gISItem.yAxisLeft );
                 right = Math.round( magnitude );
             }else{
-                left  = Math.round( magnitude * gISItem.yAxisMove );
+                left  = Math.round( magnitude * gISItem.yAxisLeft );
                 right = -1 * Math.round( magnitude );
             }
         }
@@ -684,11 +669,11 @@ const opTriggerMove = ( index ) => {
 const opStickMove = ( index ) => {
 
     const gISItem = gInputStatus[ index ];
-    gISItem.xAxisMove = gISItem.rotationLeftRight;
-    if( gISItem.xAxisMove * gISItem.xAxisMove + gISItem.yAxisMove * gISItem.yAxisMove > 1 ){
-        const angle = Math.atan2( gISItem.yAxisMove, gISItem.xAxisMove );
-        gISItem.xAxisMove = Math.cos( angle );
-        gISItem.yAxisMove = Math.sin( angle );
+    gISItem.xAxisLeft = gISItem.xAxisRight;
+    if( Math.pow( gISItem.xAxisLeft, 2 ) + Math.pow( gISItem.yAxisLeft, 2 ) > 1 ){
+        const angle = Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft );
+        gISItem.xAxisLeft = Math.cos( angle );
+        gISItem.yAxisLeft = Math.sin( angle );
     }
     opMove( index, index );
 
@@ -955,25 +940,20 @@ const drawAnalogState = ( offsetX, offsetY, index, context, canvas, isLeft ) => 
     // Pointer
     ctx.beginPath();
     const RADIUS = 5;
-    const GAMEPAD_LEFT_AXIS_X = 0;
-    const GAMEPAD_LEFT_AXIS_Y = 1;
-    const GAMEPAD_RIGHT_AXIS_X = 2;
-    const GAMEPAD_RIGHT_AXIS_Y = 3;
-    const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
-    if( gamepad ){
-        let xAxisMove, yAxisMove;
-        if( isLeft ){
-            xAxisMove = gamepad.axes[ GAMEPAD_LEFT_AXIS_X ];
-            yAxisMove = -1 * gamepad.axes[ GAMEPAD_LEFT_AXIS_Y ];
-        }else{
-            xAxisMove = gamepad.axes[ GAMEPAD_RIGHT_AXIS_X ];
-            yAxisMove = -1 * gamepad.axes[ GAMEPAD_RIGHT_AXIS_Y ];
-        }
-
-        ctx.arc( canvas.width/3 - SQUARE_SIZE / 2  + offsetX + xAxisMove * SQUARE_SIZE / 2, 
-                    canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET - yAxisMove * SQUARE_SIZE / 2, 
-                        RADIUS, 0, 2 * Math.PI, false );
+    const gISItem = gInputStatus[ index ];
+    let xAxis, yAxis;
+    if( isLeft ){
+        xAxis = gISItem.xAxisLeft;
+        yAxis = gISItem.yAxisLeft;
+    }else{
+        xAxis = gISItem.xAxisRight;
+        yAxis = gISItem.yAxisRight;
     }
+
+    ctx.arc( canvas.width/3 - SQUARE_SIZE / 2  + offsetX + xAxis * SQUARE_SIZE / 2, 
+                canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET - yAxis * SQUARE_SIZE / 2, 
+                    RADIUS, 0, 2 * Math.PI, false );
+    
     ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )";
     ctx.fill();
     ctx.closePath();
