@@ -528,6 +528,7 @@ const executeDoubleCubeCommand = () => {
 
     const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ 0 ] ];
     const gISItem_0 = gInputStatus[ 0 ];
+    const gISItem_1 = gInputStatus[ 1 ];
 
     if( gamepad ){
 
@@ -535,10 +536,10 @@ const executeDoubleCubeCommand = () => {
             opMove( 0, 0 );
         }
 
-        if( isValidAnalogValue( gISItem_0.xAxisRight ) || isValidAnalogValue( gISItem_0.yAxisRight ) ){ 
-            gISItem_0.xAxisLeft = gISItem_0.xAxisRight;
-            gISItem_0.yAxisLeft = gISItem_0.yAxisRight;
-            opMove( 1, 0 );
+        if( isValidAnalogValue( gISItem_0.xAxisRight ) || isValidAnalogValue( gISItem_0.yAxisRight ) ){
+            gISItem_1.xAxisLeft = gISItem_0.xAxisRight;
+            gISItem_1.yAxisLeft = gISItem_0.yAxisRight;
+            opMove( 1, 1 );
         }
 
     }
@@ -913,6 +914,16 @@ const setMotorSpeed = ( cube, left, right ) => {
 // -- Draw Background
 const drawBackground = ( context, canvas ) => {
 
+    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
+        drawBackgroundSingle( context, canvas );
+    }else{
+        drawBackgroundDouble( context, canvas );
+    }
+
+}
+
+const drawBackgroundSingle = ( context, canvas ) => {
+
     const ctx = context;
     canvas.width = 400;
     canvas.height = 300;
@@ -922,16 +933,51 @@ const drawBackground = ( context, canvas ) => {
     ctx.fillStyle = "rgba( 146, 168, 0, 1 )" ;    
     ctx.fillRect( 0, canvas.height/2, canvas.width, canvas.height/2 );
     ctx.restore();
+
 }
+
+const drawBackgroundDouble = ( context, canvas ) => {
+
+    const ctx = context;
+    canvas.width = 400;
+    canvas.height = 300;
+    ctx.save();
+    ctx.fillStyle = "rgba( 192, 192, 192, 1 )" ;
+    ctx.fillRect( 0, 0, canvas.width, canvas.height/2 );
+    ctx.fillStyle = "rgba( 0, 148, 170, 1 )" ;
+    ctx.fillRect( 0, canvas.height/2, canvas.width/2, canvas.height/2 );
+    ctx.fillStyle = "rgba( 146, 168, 0, 1 )" ;
+    ctx.fillRect( canvas.width/2, canvas.height/2, canvas.width/2, canvas.height/2 );
+    ctx.restore();
+
+} 
 
 // -- Draw the state of left analog stick
 const drawAnalogLeft = ( index, context, canvas ) => {
 
-    drawAnalogState( -10, 0, index, context, canvas, true );
+    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
+        drawAnalogLeftSingle( index, context, canvas );
+    }else{
+        drawAnalogLeftDouble( index, context, canvas );
+    }
 
 }
 
-const drawAnalogState = ( offsetX, offsetY, index, context, canvas, isLeft ) => {
+const drawAnalogLeftSingle = ( index, context, canvas ) => {
+
+    drawAnalogStateSingle( -10, 0, index, context, canvas, true );
+
+}
+
+const drawAnalogLeftDouble = ( index, context, canvas ) => {
+    
+    if( index === 0 ){
+        drawAnalogStateDouble( 0, 0, context, canvas, true );
+    }
+
+}
+
+const drawAnalogStateSingle = ( offsetX, offsetY, index, context, canvas, isLeft ) => {
 
     const SQUARE_SIZE = 100;
     const OFFSET = 10;
@@ -981,8 +1027,8 @@ const drawAnalogState = ( offsetX, offsetY, index, context, canvas, isLeft ) => 
             yAxis = gISItem.yAxisRight;
         }
 
-        if( gISItem.xAxisLeftBeforeAdjust !== undefined ){
-            xAxis = gISItem.xAxisLeftBeforeAdjust;
+        if( gISItem.xAxisRightBeforeAdjust !== undefined ){
+            xAxis = gISItem.xAxisRightBeforeAdjust;
         }else{
             xAxis = gISItem.xAxisRight;
         }
@@ -1018,12 +1064,86 @@ const drawAnalogState = ( offsetX, offsetY, index, context, canvas, isLeft ) => 
 
 }
 
+const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
+
+    const SQUARE_SIZE = 100;
+    const OFFSET = 10;
+
+    const ctx = context;
+    ctx.save();
+    ctx.fillStyle = "rgba( 255, 255, 255, 0.3 )" ;
+    ctx.strokeStyle = "rgba( 255, 255, 255, 0.6 )" ;
+
+    // Rect for rim
+    ctx.strokeRect( canvas.width/8 + offsetX, canvas.height/2 * 2 - SQUARE_SIZE - OFFSET, 
+        SQUARE_SIZE, SQUARE_SIZE );
+    ctx.fillRect( canvas.width/8 + offsetX, canvas.height/2 * 2 - SQUARE_SIZE - OFFSET, 
+        SQUARE_SIZE, SQUARE_SIZE );
+    
+    // Circle
+    ctx.beginPath();
+    ctx.arc( canvas.width/8 + offsetX + SQUARE_SIZE / 2, 
+        canvas.height/2 * 2 - SQUARE_SIZE / 2 - OFFSET,
+        SQUARE_SIZE / 2, 0, Math.PI * 2 );
+    
+    // Center lines
+    ctx.moveTo( canvas.width/4 + offsetX, canvas.height/2 * 2- SQUARE_SIZE - OFFSET );
+    ctx.lineTo( canvas.width/4 + offsetX, canvas.height/2 * 2 - OFFSET );
+    ctx.moveTo( canvas.width/8 + offsetX, canvas.height/2 * 2 - SQUARE_SIZE/2 - OFFSET );
+    ctx.lineTo( canvas.width/8 + SQUARE_SIZE + offsetX, canvas.height/2 * 2 - SQUARE_SIZE/2 - OFFSET );
+    ctx.stroke();
+
+    // Pointer
+    ctx.beginPath();
+    const RADIUS = 5;
+    const gISItem = gInputStatus[ 0 ];
+    let xAxis = 0, yAxis = 0;
+
+    if( isLeft ){
+        xAxis = gISItem.xAxisLeft;
+        yAxis = gISItem.yAxisLeft;
+    }else{
+        xAxis = gISItem.xAxisRight;
+        yAxis = gISItem.yAxisRight;
+    }
+
+    ctx.arc( canvas.width/8 + SQUARE_SIZE / 2 + offsetX + xAxis * SQUARE_SIZE / 2, 
+                canvas.height/2 * 2 - SQUARE_SIZE/2 - OFFSET - yAxis * SQUARE_SIZE / 2, 
+                    RADIUS, 0, 2 * Math.PI, false );
+    
+    ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )";
+    ctx.fill();
+    ctx.closePath();
+
+    ctx.restore();
+
+}
+
 // -- Draw the state of right analog stick. ONLY for x-axis
 const drawAnalogRight = ( index, context, canvas ) => {
 
-    drawAnalogState( canvas.width/3 - 18, 0, index, context, canvas, false );
+    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
+        drawAnalogRightSingle( index, context, canvas );
+    }else{
+        drawAnalogRightDouble( index, context, canvas );
+    }
 
 }
+
+const drawAnalogRightSingle = ( index, context, canvas ) => {
+
+    drawAnalogStateSingle( canvas.width/3 - 18, 0, index, context, canvas, false );
+
+}
+
+const drawAnalogRightDouble = ( index, context, canvas ) => {
+
+    if( index === 0 ){
+        drawAnalogStateDouble( canvas.width/2, 0, context, canvas, false );
+    }
+
+}
+
 
 // -- Draw connection status panel
 const cubeImage = new Image();
