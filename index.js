@@ -26,6 +26,14 @@ const MODE_A = 'Normal';
 const MODE_B = 'Stick';
 const OPE_MODES_NAME_ARRAY =  [ MODE_A, MODE_B ];
 
+const CUBE_CONTROL_MODE_SINGLE = 0;
+const CUBE_CONTROL_MODE_DOUBLE = 1;
+let gCubeControlMode = CUBE_CONTROL_MODE_SINGLE;
+const HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC = 500;
+let gCubeControlModeTime = { 
+    start: undefined, 
+    left: HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC,
+};
 
 // On Input
 // Gamepad Listner
@@ -142,6 +150,40 @@ const selectGamePad = () => {
 
             }
             gPreviousHomeButton[ item ] = currentButtonStatus;
+
+            // Cube control mode
+            if( currentButtonStatus === 1 ){
+                let currentTime = ( new Date() ).getTime();
+                if( gCubeControlModeTime.start === 0 ){
+                    // no operatoin.
+                }else if( gCubeControlModeTime.start === undefined ){
+                    gCubeControlModeTime.start = currentTime;
+                }else{
+                    if( currentTime - gCubeControlModeTime.start > HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC ){
+                        // Button hold for a long time enough
+                        console.log( 'Button hold.' );
+                        gCubeControlModeTime.start = 0;
+
+
+                        if( gCurrentGamePadIndices[0] !== item ){
+
+                            // Exchange 0 to 1
+                            [ gCurrentGamePadIndices[0], gCurrentGamePadIndices[1] ] 
+                                = [ gCurrentGamePadIndices[1], gCurrentGamePadIndices[0] ];
+
+                            // Then, set this item 1st.
+                            gCurrentGamePadIndices[0] = item;
+
+                        }
+
+                        vibrateGamePadLong( gamePad );
+                        gGamePadIndex = item;
+
+                    }
+                }
+            }else{
+                gCubeControlModeTime.start = undefined;
+            }
         }
     }
     
@@ -152,6 +194,18 @@ const vibrateGamePad = ( gamePad ) => {
     if ( gamePad.vibrationActuator ) {
         gamePad.vibrationActuator.playEffect( "dual-rumble", { 
             duration: 150, 
+            weakMagnitude: 1.0,
+            strongMagnitude: 1.0 
+        } );
+    }
+
+}
+
+const vibrateGamePadLong = ( gamePad ) => {
+
+    if ( gamePad.vibrationActuator ) {
+        gamePad.vibrationActuator.playEffect( "dual-rumble", { 
+            duration: 500, 
             weakMagnitude: 1.0,
             strongMagnitude: 1.0 
         } );
@@ -420,7 +474,7 @@ const executeCubeCommand = () => {
             if( gISItem.rotation === 1 ){
                 // rotation mode
                 opRotation( index );
-                console.log( "rotation");
+                // console.log( "rotation");
             }else{
                 if( isValidAnalogValue( gISItem.leftTrigger ) || isValidAnalogValue( gISItem.rightTrigger ) ){ 
                     opTriggerMove( index );
