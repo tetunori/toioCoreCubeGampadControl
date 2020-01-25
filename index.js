@@ -22,10 +22,9 @@ let gGamePadIndex = undefined;
 const gCubes = [ undefined, undefined ];
 
 let gOperationModeIndexArray = [ 0, 0 ];
-const MODE_A = 'A';
-const MODE_B = 'B';
-const MODE_C = 'C';
-const OPE_MODES_NAME_ARRAY =  [ MODE_A, MODE_B, MODE_C ];
+const MODE_A = 'Normal';
+const MODE_B = 'Stick';
+const OPE_MODES_NAME_ARRAY =  [ MODE_A, MODE_B ];
 
 
 // On Input
@@ -827,7 +826,7 @@ const drawBackground = ( context, canvas ) => {
 // -- Draw the state of left analog stick
 const drawAnalogLeft = ( index, context, canvas ) => {
 
-    drawAnalogState( -6, 0, index, context, canvas, true );
+    drawAnalogState( -10, 0, index, context, canvas, true );
 
 }
 
@@ -893,7 +892,7 @@ const drawAnalogState = ( offsetX, offsetY, index, context, canvas, isLeft ) => 
 // -- Draw the state of right analog stick. ONLY for x-axis
 const drawAnalogRight = ( index, context, canvas ) => {
 
-    drawAnalogState( canvas.width/3 - 10, 0, index, context, canvas, false );
+    drawAnalogState( canvas.width/3 - 18, 0, index, context, canvas, false );
 
 }
 
@@ -988,14 +987,14 @@ const drawStatus = ( index, context, canvas ) => {
     // Mode text
     let modeText = 'Op. Mode: ';
     modeText += OPE_MODES_NAME_ARRAY[ gOperationModeIndexArray[ index ] ];
-    let xPosMode = 2*canvas.width/3 + 12;
+    let xPosMode = 2*canvas.width/3;
     let yPosMode = canvas.height/2 * ( index + 1 ) -100;
     ctx.fillText( modeText, xPosMode, yPosMode );
 
     // Max speed text
     let maxSpeedText = 'Max Speed: ';
     maxSpeedText += Math.round( gMaxSpeed[ index ] * 100 );
-    let xPosMaxSpeed = 2*canvas.width/3 + 12;
+    let xPosMaxSpeed = 2*canvas.width/3;
     let yPosMaxSpeed = canvas.height/2 * ( index + 1 ) - 70;
     ctx.fillText( maxSpeedText, xPosMaxSpeed, yPosMaxSpeed );
 
