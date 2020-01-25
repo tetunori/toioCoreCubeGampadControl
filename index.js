@@ -304,12 +304,16 @@ const registerInput = () => {
             if( index === 0 ){ gISItem.xAxisLeft = 1; }
         }else{
             if( gamePad ){
-                if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
-                    gISItem.xAxisLeft = -1;
-                }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
-                    gISItem.xAxisLeft = 1;
+                if( gOperationModeIndexArray[ index ] === 0 ){
+                    if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
+                        gISItem.xAxisLeft = -1;
+                    }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
+                        gISItem.xAxisLeft = 1;
+                    }else{
+                        gISItem.xAxisLeft = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
+                    }
                 }else{
-                    gISItem.xAxisLeft = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
+                    gISItem.xAxisLeft = gISItem.xAxisRight;
                 }
             }else{
                 gISItem.xAxisLeft = 0;
@@ -323,12 +327,26 @@ const registerInput = () => {
             if( index === 0 ){ gISItem.yAxisLeft = -1; }
         }else{
             if( gamePad ){
-                if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
-                    gISItem.yAxisLeft = 1;
-                }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
-                    gISItem.yAxisLeft = -1;
+                if( gOperationModeIndexArray[ index ] === 0 ){
+
+                    if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
+                        gISItem.yAxisLeft = 1;
+                    }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
+                        gISItem.yAxisLeft = -1;
+                    }else{
+                        gISItem.yAxisLeft = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
+                    }
+                    
                 }else{
-                    gISItem.yAxisLeft = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
+
+                    if( isValidAnalogValue( gISItem.leftTrigger ) ){ 
+                        gISItem.yAxisLeft = gISItem.leftTrigger;
+                    }else if( isValidAnalogValue( gISItem.rightTrigger ) ){ 
+                        gISItem.yAxisLeft = -1 * gISItem.rightTrigger;
+                    }else{
+                        gISItem.yAxisLeft = 0;
+                    }
+
                 }
             }else{
                 gISItem.yAxisLeft = 0;
@@ -478,15 +496,9 @@ const executeSingleCubeCommand = () => {
                 }
             }
         }else if( gOperationModeIndexArray[ index ] === 1 ) {
-
-            if( isValidAnalogValue( gISItem.leftTrigger ) ){ 
-                gISItem.yAxisLeft = gISItem.leftTrigger;
-            }else if( isValidAnalogValue( gISItem.rightTrigger ) ){ 
-                gISItem.yAxisLeft = -1 * gISItem.rightTrigger;
-            }
              
             if( isValidAnalogValue( gISItem.yAxisLeft ) ){ 
-                opStickMove( index );
+                opMove( index, index );
             }
 
         }
