@@ -116,7 +116,8 @@ const selectGamePad = () => {
         if( gamePad !== undefined ){
             let currentButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
             if( currentButtonStatus !== gPreviousHomeButton[ item ] ){
-                if( ( currentButtonStatus === 1 ) && ( gPreviousHomeButton[ item ] === 0 ) ){
+                if( ( currentButtonStatus === 1 ) && 
+                    ( ( gPreviousHomeButton[ item ] === 0 ) || ( gPreviousHomeButton[ item ] === undefined ) ) ){
 
                     if( gCurrentGamePadIndices.indexOf( item ) !== -1 ){
                         // item is aleady in this array.
