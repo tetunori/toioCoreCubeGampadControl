@@ -3,124 +3,60 @@
 const DEFAULT_SPEED = 0.6;
 let gMaxSpeed = [ DEFAULT_SPEED, DEFAULT_SPEED ];
 
-const CUBE_SPEC_MAX_SPEED = 115;
-
-let gRotationPoint = undefined;
-const ROTATION_CENTER      = 0;
-const ROTATION_HEAD        = 1;
-const ROTATION_TAIL        = 2;
-const ROTATION_LEFT_WHEEL  = 3;
-const ROTATION_RIGHT_WHEEL = 4;
-
-let gRotationDirection = undefined;
-const ROTATION_DIR_LEFT  = 1;
-const ROTATION_DIR_RIGHT = 2;
-
 let gGamePadIndexArray = new Array();
 let gCurrentGamePadIndices = [ undefined, undefined ];
 
-let gGamePadIndex = undefined;
-
 const gCubes = [ undefined, undefined ];
 
-let gOperationModeIndexArray = [ 0, 0 ];
-const MODE_A_SINGLE = 'Normal';
-const MODE_B_SINGLE = 'Stick';
-const OPE_MODES_NAME_ARRAY_SINGLE =  [ MODE_A_SINGLE, MODE_B_SINGLE ];
-const MODE_A_DOUBLE = 'Combined';
-const MODE_B_DOUBLE = 'Separated';
-const OPE_MODES_NAME_ARRAY_DOUBLE =  [ MODE_A_DOUBLE, MODE_B_DOUBLE ];
-
+// -- Cube Control Mode: Single/Double
 const CUBE_CONTROL_MODE_SINGLE = 0;
 const CUBE_CONTROL_MODE_DOUBLE = 1;
 let gCubeControlMode = CUBE_CONTROL_MODE_SINGLE;
-const HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC = 500;
-let gCubeControlModeStartTime = [ undefined, undefined ];
 
-// On Input
-// Gamepad Listner
+// -- Operation Mode
+let gOperationModeIndexArray = [ 0, 0 ];
+const MODE_A_SINGLE = 'Normal';
+const MODE_B_SINGLE = 'Stick';
+const OPE_MODES_NAME_ARRAY_SINGLE = [ MODE_A_SINGLE, MODE_B_SINGLE ];
+const MODE_A_DOUBLE = 'Combined';
+const MODE_B_DOUBLE = 'Separated';
+const OPE_MODES_NAME_ARRAY_DOUBLE = [ MODE_A_DOUBLE, MODE_B_DOUBLE ];
+
+
+// On Gamepad
+// -- Gamepad Listner
 if ( window.GamepadEvent ) {
 
-  window.addEventListener( "gamepadconnected", ( event ) => {
-    // console.log( "Gamepad connected." );
-    // console.log( event.gamepad );
-    gGamePadIndexArray.push( event.gamepad.index );
-    // gGamePadIndex = gGamePadIndexArray[0];
-    console.log( gGamePadIndexArray );
-  });
+    window.addEventListener( "gamepadconnected", ( event ) => {
+        // console.log( "Gamepad connected." );
+        // console.log( event.gamepad );
+        // console.log( gGamePadIndexArray );
+        gGamePadIndexArray.push( event.gamepad.index );
+    });
 
-  window.addEventListener( "gamepaddisconnected", ( event ) => {
-    // console.log( "Gamepad disconnected." );
-    // console.log( event.gamepad );
-    gGamePadIndex = undefined;
-  });
+    window.addEventListener( "gamepaddisconnected", ( event ) => {
+        // console.log( "Gamepad disconnected." );
+        // console.log( event.gamepad );
+    });
 
 }
 
-// Key Input
-const KEYCODE_ESC   =  27;
-const KEYCODE_LEFT  =  37;
-const KEYCODE_UP    =  38;
-const KEYCODE_RIGHT =  39;
-const KEYCODE_DOWN  =  40;
-const KEYCODE_D     =  68;
-const KEYCODE_F     =  70;
-const KEYCODE_H     =  72;
-const KEYCODE_Q     =  81;
-const KEYCODE_R     =  82;
-const KEYCODE_T     =  84;
-const KEYCODE_PLUS  = 187;
-const KEYCODE_MINUS = 189;
 
-let gKeyInputStatus = [
-    { code: KEYCODE_ESC  , value:0 },
-    { code: KEYCODE_LEFT , value:0 },
-    { code: KEYCODE_UP   , value:0 },
-    { code: KEYCODE_RIGHT, value:0 },
-    { code: KEYCODE_DOWN , value:0 },
-    { code: KEYCODE_D    , value:0 },
-    { code: KEYCODE_F    , value:0 },
-    { code: KEYCODE_H    , value:0 },
-    { code: KEYCODE_Q    , value:0 },
-    { code: KEYCODE_R    , value:0 },
-    { code: KEYCODE_T    , value:0 },
-    { code: KEYCODE_PLUS , value:0 },
-    { code: KEYCODE_MINUS, value:0 },
-];
-
-const getKeyInputValue = ( keyCode ) => {
-    return gKeyInputStatus.find( item => item.code === keyCode ).value;
-}
-
-// Handle key events.
-window.addEventListener( 'keydown', ( event ) => { InputKeyValue( event.keyCode, 1 ), procKeyDown( event.keyCode ); });
-window.addEventListener( 'keyup',   ( event ) => { InputKeyValue( event.keyCode, 0 ) });
-
-const InputKeyValue = ( keyCode, value ) => {
-
-    // console.log( keyCode );
-    for( let item of gKeyInputStatus ){
-        if( item.code === keyCode ){
-            item.value = value;
-            break;
-        }
-    }
-
-}
-
-let gPreviousHomeButton = [ undefined, undefined ];
+let gPreviousHomeButtonStatus = [ undefined, undefined ];
+let gCubeControlModeStartTime = [ undefined, undefined ];
 const selectGamePad = () => {
 
     const GAMEPAD_BT_HOME = 16;
 
-    let gamePad;
     for( let item of gGamePadIndexArray ){
-        gamePad = navigator.getGamepads()[ item ];
+        let gamePad = navigator.getGamepads()[ item ];
         if( gamePad !== undefined ){
-            let currentButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
-            if( currentButtonStatus !== gPreviousHomeButton[ item ] ){
-                if( ( currentButtonStatus === 1 ) && 
-                    ( ( gPreviousHomeButton[ item ] === 0 ) || ( gPreviousHomeButton[ item ] === undefined ) ) ){
+            let currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
+            if( currentHomeButtonStatus !== gPreviousHomeButtonStatus[ item ] ){
+                if( ( currentHomeButtonStatus === 1 ) && 
+                    ( ( gPreviousHomeButtonStatus[ item ] === 0 ) || 
+                      ( gPreviousHomeButtonStatus[ item ] === undefined ) ) ){
+                    // Home button pressed.
 
                     if( gCurrentGamePadIndices.indexOf( item ) !== -1 ){
                         // item is aleady in this array.
@@ -145,25 +81,24 @@ const selectGamePad = () => {
                     }
 
                     vibrateGamePad( gamePad, gCurrentGamePadIndices[0] !== item );
-                    gGamePadIndex = item;
                     gCubeControlMode = CUBE_CONTROL_MODE_SINGLE;
                     // console.log( gamePad );
-                    // console.log( "gGamePadIndex: " + gGamePadIndex );
                     // console.log( gCurrentGamePadIndices );
                 }
 
             }
-            gPreviousHomeButton[ item ] = currentButtonStatus;
+            gPreviousHomeButtonStatus[ item ] = currentHomeButtonStatus;
 
             // Cube control mode
-            if( currentButtonStatus === 1 ){
+            if( currentHomeButtonStatus === 1 ){
                 let currentTime = ( new Date() ).getTime();
                 if( gCubeControlModeStartTime[ item ] === 0 ){
                     // no operatoin.
                 }else if( gCubeControlModeStartTime[ item ] === undefined ){
                     gCubeControlModeStartTime[ item ] = currentTime;
                 }else{
-                    if( currentTime - gCubeControlModeStartTime[ item ] > HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC ){
+                    const HOLD_TIME = 500;
+                    if( currentTime - gCubeControlModeStartTime[ item ] > HOLD_TIME ){
                         // Button hold for a long time enough
                         console.log( 'Button hold.' );
                         resetAll();
@@ -182,7 +117,6 @@ const selectGamePad = () => {
                         }
 
                         vibrateGamePadLong( gamePad );
-                        gGamePadIndex = item;
 
                     }
                 }
@@ -194,6 +128,8 @@ const selectGamePad = () => {
     
 }
 
+// -- Vibrate functions
+// --- Interface
 const vibrateGamePad = ( gamePad, isTwice ) => {
 
     const INTERVAL = 200; // msec
@@ -205,41 +141,23 @@ const vibrateGamePad = ( gamePad, isTwice ) => {
 
 }
 
-const vibrateGamePadOnce = ( gamePad ) => {
+// -- Single vibration.
+const vibrateGamePadOnce = ( gamePad ) => { _vibrateGamePad( gamePad, 150 ); }
+
+// -- Long and single vibration.
+const vibrateGamePadLong = ( gamePad ) => { _vibrateGamePad( gamePad, 500 ); }
+
+// Actual vibration function
+const _vibrateGamePad = ( gamePad, duration ) => {
 
     if ( gamePad.vibrationActuator ) {
+
         gamePad.vibrationActuator.playEffect( "dual-rumble", { 
-            duration: 150, 
+            duration: duration, 
             weakMagnitude: 1.0,
             strongMagnitude: 1.0 
         } );
-    }
 
-}
-
-const vibrateGamePadLong = ( gamePad ) => {
-
-    if ( gamePad.vibrationActuator ) {
-        gamePad.vibrationActuator.playEffect( "dual-rumble", { 
-            duration: 500, 
-            weakMagnitude: 1.0,
-            strongMagnitude: 1.0 
-        } );
-    }
-
-}
-
-// Procedure on Key Down
-const procKeyDown = ( code ) => {
-
-    if( code === KEYCODE_Q ){
-        exchangeCubes();
-    }else if( code === KEYCODE_ESC ){
-        allReset();
-    }else if( code === KEYCODE_PLUS ){
-        plusMaxSpeed();
-    }else if( code === KEYCODE_MINUS ){
-        minusMaxSpeed();
     }
 
 }
@@ -258,9 +176,6 @@ const gInputStatus = [{
     reset:0.0,
     minusMaxSpeed:0.0,
     plusMaxSpeed:0.0,
-    connectCube1:0.0,
-    connectCube2:0.0,
-    analogMoveDisable:0.0,
     leftTrigger:0.0,
     rightTrigger:0.0,
 }, {
@@ -276,9 +191,6 @@ const gInputStatus = [{
     reset:0.0,
     minusMaxSpeed:0.0,
     plusMaxSpeed:0.0,
-    connectCube1:0.0,
-    connectCube2:0.0,
-    analogMoveDisable:0.0,
     leftTrigger:0.0,
     rightTrigger:0.0,
 }];
@@ -317,63 +229,51 @@ const registerInput = () => {
         gISItem.yAxisLeftBeforeAdjust = undefined;
 
         // X Axis of Left Analog Stick.
-        if( getKeyInputValue( KEYCODE_LEFT ) ){
-            if( index === 0 ){ gISItem.xAxisLeft = -1; }
-        }else if( getKeyInputValue( KEYCODE_RIGHT ) ){
-            if( index === 0 ){ gISItem.xAxisLeft = 1; }
-        }else{
-            if( gamePad ){
-                
-                if( ( gOperationModeIndexArray[ index ] === 1 ) &&
-                    ( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ) ){
-                        gISItem.xAxisLeft = gISItem.xAxisRight;
-                    }else{
-
-                        if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
-                            gISItem.xAxisLeft = -1;
-                        }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
-                            gISItem.xAxisLeft = 1;
-                        }else{
-                            gISItem.xAxisLeft = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
-                        }
-
-                    }
-
-            }else{
-                gISItem.xAxisLeft = 0;
-            }
-        }
-        
-        // Y Axis of Left Analog Stick.
-        if( getKeyInputValue( KEYCODE_UP ) ){
-            if( index === 0 ){ gISItem.yAxisLeft = 1; }
-        }else if( getKeyInputValue( KEYCODE_DOWN ) ){
-            if( index === 0 ){ gISItem.yAxisLeft = -1; }
-        }else{
-            if( gamePad ){
-
-                
-
-                if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
-                    gISItem.yAxisLeft = 1;
-                }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
-                    gISItem.yAxisLeft = -1;
+        if( gamePad ){
+            
+            if( ( gOperationModeIndexArray[ index ] === 1 ) &&
+                ( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ) ){
+                    gISItem.xAxisLeft = gISItem.xAxisRight;
                 }else{
 
-                    gISItem.yAxisLeft = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
-                    if( gOperationModeIndexArray[ index ] === 1 ){
-                        if( isValidAnalogValue( gamePad.buttons[ GAMEPAD_BT_L2 ].value ) ){ 
-                            gISItem.yAxisLeft = gamePad.buttons[ GAMEPAD_BT_L2 ].value;
-                        }else if( isValidAnalogValue( gamePad.buttons[ GAMEPAD_BT_R2 ].value ) ){ 
-                            gISItem.yAxisLeft = -1 * gamePad.buttons[ GAMEPAD_BT_R2 ].value;
-                        }
+                    if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
+                        gISItem.xAxisLeft = -1;
+                    }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
+                        gISItem.xAxisLeft = 1;
+                    }else{
+                        gISItem.xAxisLeft = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
                     }
 
                 }
 
+        }else{
+            gISItem.xAxisLeft = 0;
+        }
+        
+        // Y Axis of Left Analog Stick.
+        if( gamePad ){
+
+            
+
+            if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
+                gISItem.yAxisLeft = 1;
+            }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
+                gISItem.yAxisLeft = -1;
             }else{
-                gISItem.yAxisLeft = 0;
+
+                gISItem.yAxisLeft = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
+                if( gOperationModeIndexArray[ index ] === 1 ){
+                    if( isValidAnalogValue( gamePad.buttons[ GAMEPAD_BT_L2 ].value ) ){ 
+                        gISItem.yAxisLeft = gamePad.buttons[ GAMEPAD_BT_L2 ].value;
+                    }else if( isValidAnalogValue( gamePad.buttons[ GAMEPAD_BT_R2 ].value ) ){ 
+                        gISItem.yAxisLeft = -1 * gamePad.buttons[ GAMEPAD_BT_R2 ].value;
+                    }
+                }
+
             }
+
+        }else{
+            gISItem.yAxisLeft = 0;
         }
 
         // Adjust output value outside of the circle for left analog stick.
@@ -416,6 +316,7 @@ const registerInput = () => {
             }
 
             // Speed lever / Change button
+            const CUBE_SPEC_MAX_SPEED = 115;
             gISItem.maxSpeed = CUBE_SPEC_MAX_SPEED * gamePad.buttons[ GAMEPAD_BT_L2 ].value / 100;
 
             // Exchange Cube1/Cube2 button
@@ -431,9 +332,6 @@ const registerInput = () => {
             gISItem.minusMaxSpeed = gamePad.buttons[ GAMEPAD_BT_L1 ].value;
             gISItem.plusMaxSpeed  = gamePad.buttons[ GAMEPAD_BT_R1 ].value;
 
-            // Analog Omni-direction movement
-            gISItem.analogMoveDisable = gamePad.buttons[ GAMEPAD_BT_0 ].value;
-
             // Left/Right trigger
             gISItem.leftTrigger = gamePad.buttons[ GAMEPAD_BT_L2 ].value;
             gISItem.rightTrigger = gamePad.buttons[ GAMEPAD_BT_R2 ].value;
@@ -447,7 +345,6 @@ const registerInput = () => {
             gISItem.reset = 0;
             gISItem.minusMaxSpeed = 0;
             gISItem.plusMaxSpeed = 0;
-            gISItem.analogMoveDisable = 0;
             gISItem.leftTrigger = 0;
             gISItem.rightTrigger = 0;
 
@@ -648,11 +545,7 @@ const opMove = ( cubeIndex, gamePadIndex ) => {
     // console.log( magnitude );
 
     let angle;
-    if( gISItem.analogMoveDisable === 1 ){
-        angle = Math.round( 4 * Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft) / Math.PI ) * Math.PI/4;
-    }else{
-        angle = Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft );
-    }
+    angle = Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft );
     
     // console.log( angle );
     let left, right;
@@ -792,7 +685,7 @@ const exchangeCubes = () => {
 const switchOperationMode = ( index ) => {
 
     gOperationModeIndexArray[ index ]++;
-    if( gOperationModeIndexArray[ index ] > OPE_MODES_NAME_ARRAY_SINGLE.length - 1 ){
+    if( gOperationModeIndexArray[ index ] > gOperationModeIndexArray.length - 1 ){
         gOperationModeIndexArray[ index ] = 0;
     }
 
