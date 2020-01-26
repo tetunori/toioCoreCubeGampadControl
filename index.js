@@ -3,197 +3,160 @@
 const DEFAULT_SPEED = 0.6;
 let gMaxSpeed = [ DEFAULT_SPEED, DEFAULT_SPEED ];
 
-const CUBE_SPEC_MAX_SPEED = 115;
-
-let gRotationPoint = undefined;
-const ROTATION_CENTER      = 0;
-const ROTATION_HEAD        = 1;
-const ROTATION_TAIL        = 2;
-const ROTATION_LEFT_WHEEL  = 3;
-const ROTATION_RIGHT_WHEEL = 4;
-
-let gRotationDirection = undefined;
-const ROTATION_DIR_LEFT  = 1;
-const ROTATION_DIR_RIGHT = 2;
-
 let gGamePadIndexArray = new Array();
 let gCurrentGamePadIndices = [ undefined, undefined ];
 
-let gGamePadIndex = undefined;
-
 const gCubes = [ undefined, undefined ];
 
-let gOperationModeIndexArray = [ 0, 0 ];
-const MODE_A_SINGLE = 'Normal';
-const MODE_B_SINGLE = 'Stick';
-const OPE_MODES_NAME_ARRAY_SINGLE =  [ MODE_A_SINGLE, MODE_B_SINGLE ];
-const MODE_A_DOUBLE = 'Combined';
-const MODE_B_DOUBLE = 'Separated';
-const OPE_MODES_NAME_ARRAY_DOUBLE =  [ MODE_A_DOUBLE, MODE_B_DOUBLE ];
-
+// -- Cube Control Mode: Single/Double
 const CUBE_CONTROL_MODE_SINGLE = 0;
 const CUBE_CONTROL_MODE_DOUBLE = 1;
 let gCubeControlMode = CUBE_CONTROL_MODE_SINGLE;
-const HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC = 500;
-let gCubeControlModeStartTime = [ undefined, undefined ];
 
-// On Input
-// Gamepad Listner
+// -- Operation Mode
+let gOperationModeIndexArray = [ 0, 0 ];
+const MODE_A_SINGLE = 'Normal';
+const MODE_B_SINGLE = 'Stick';
+const OPE_MODES_NAME_ARRAY_SINGLE = [ MODE_A_SINGLE, MODE_B_SINGLE ];
+const MODE_A_DOUBLE = 'Combined';
+const MODE_B_DOUBLE = 'Separated';
+const OPE_MODES_NAME_ARRAY_DOUBLE = [ MODE_A_DOUBLE, MODE_B_DOUBLE ];
+
+
+// On Gamepad
+// -- Gamepad Listner
 if ( window.GamepadEvent ) {
 
-  window.addEventListener( "gamepadconnected", ( event ) => {
-    // console.log( "Gamepad connected." );
-    // console.log( event.gamepad );
-    gGamePadIndexArray.push( event.gamepad.index );
-    // gGamePadIndex = gGamePadIndexArray[0];
-    console.log( gGamePadIndexArray );
-  });
+    window.addEventListener( "gamepadconnected", ( event ) => {
+        // console.log( "Gamepad connected." );
+        // console.log( event.gamepad );
+        // console.log( gGamePadIndexArray );
+        gGamePadIndexArray.push( event.gamepad.index );
+    });
 
-  window.addEventListener( "gamepaddisconnected", ( event ) => {
-    // console.log( "Gamepad disconnected." );
-    // console.log( event.gamepad );
-    gGamePadIndex = undefined;
-  });
+    window.addEventListener( "gamepaddisconnected", ( event ) => {
+        // console.log( "Gamepad disconnected." );
+        // console.log( event.gamepad );
+    });
 
 }
 
-// Key Input
-const KEYCODE_ESC   =  27;
-const KEYCODE_LEFT  =  37;
-const KEYCODE_UP    =  38;
-const KEYCODE_RIGHT =  39;
-const KEYCODE_DOWN  =  40;
-const KEYCODE_D     =  68;
-const KEYCODE_F     =  70;
-const KEYCODE_H     =  72;
-const KEYCODE_Q     =  81;
-const KEYCODE_R     =  82;
-const KEYCODE_T     =  84;
-const KEYCODE_PLUS  = 187;
-const KEYCODE_MINUS = 189;
-
-let gKeyInputStatus = [
-    { code: KEYCODE_ESC  , value:0 },
-    { code: KEYCODE_LEFT , value:0 },
-    { code: KEYCODE_UP   , value:0 },
-    { code: KEYCODE_RIGHT, value:0 },
-    { code: KEYCODE_DOWN , value:0 },
-    { code: KEYCODE_D    , value:0 },
-    { code: KEYCODE_F    , value:0 },
-    { code: KEYCODE_H    , value:0 },
-    { code: KEYCODE_Q    , value:0 },
-    { code: KEYCODE_R    , value:0 },
-    { code: KEYCODE_T    , value:0 },
-    { code: KEYCODE_PLUS , value:0 },
-    { code: KEYCODE_MINUS, value:0 },
-];
-
-const getKeyInputValue = ( keyCode ) => {
-    return gKeyInputStatus.find( item => item.code === keyCode ).value;
-}
-
-// Handle key events.
-window.addEventListener( 'keydown', ( event ) => { InputKeyValue( event.keyCode, 1 ), procKeyDown( event.keyCode ); });
-window.addEventListener( 'keyup',   ( event ) => { InputKeyValue( event.keyCode, 0 ) });
-
-const InputKeyValue = ( keyCode, value ) => {
-
-    // console.log( keyCode );
-    for( let item of gKeyInputStatus ){
-        if( item.code === keyCode ){
-            item.value = value;
-            break;
-        }
-    }
-
-}
-
-let gPreviousHomeButton = [ undefined, undefined ];
-const selectGamePad = () => {
+// -- Procedure on Home button
+let gPreviousHomeButtonStatus = [ undefined, undefined ];
+const handleHomeButton = () => {
 
     const GAMEPAD_BT_HOME = 16;
 
-    let gamePad;
     for( let item of gGamePadIndexArray ){
-        gamePad = navigator.getGamepads()[ item ];
+        const gamePad = navigator.getGamepads()[ item ];
         if( gamePad !== undefined ){
-            let currentButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
-            if( currentButtonStatus !== gPreviousHomeButton[ item ] ){
-                if( ( currentButtonStatus === 1 ) && 
-                    ( ( gPreviousHomeButton[ item ] === 0 ) || ( gPreviousHomeButton[ item ] === undefined ) ) ){
-
-                    if( gCurrentGamePadIndices.indexOf( item ) !== -1 ){
-                        // item is aleady in this array.
-                        // exchange 0 to 1
-                        [ gCurrentGamePadIndices[0], gCurrentGamePadIndices[1] ] 
-                            = [ gCurrentGamePadIndices[1], gCurrentGamePadIndices[0] ];
-                    
-                    }else{
-
-                        // 1st, search for slot.
-                        if( gCurrentGamePadIndices[0] === undefined ){
-                            gCurrentGamePadIndices[0] = item;
-                        }else if( gCurrentGamePadIndices[1] === undefined ){
-                            gCurrentGamePadIndices[1] = item;
-                        }else{
-                            // slots are full.
-                            // set this item to 0
-                            gCurrentGamePadIndices[1] = gCurrentGamePadIndices[0];
-                            gCurrentGamePadIndices[0] = item;
-                        }
-
-                    }
-
-                    vibrateGamePad( gamePad, gCurrentGamePadIndices[0] !== item );
-                    gGamePadIndex = item;
-                    gCubeControlMode = CUBE_CONTROL_MODE_SINGLE;
-                    // console.log( gamePad );
-                    // console.log( "gGamePadIndex: " + gGamePadIndex );
-                    // console.log( gCurrentGamePadIndices );
+            const currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
+            if( currentHomeButtonStatus !== gPreviousHomeButtonStatus[ item ] ){
+                if( ( currentHomeButtonStatus === 1 ) && 
+                    ( ( gPreviousHomeButtonStatus[ item ] === 0 ) || 
+                      ( gPreviousHomeButtonStatus[ item ] === undefined ) ) ){
+                    // Home button pressed.
+                    selectGamePad( item );
                 }
 
             }
-            gPreviousHomeButton[ item ] = currentButtonStatus;
+            gPreviousHomeButtonStatus[ item ] = currentHomeButtonStatus;
 
             // Cube control mode
-            if( currentButtonStatus === 1 ){
-                let currentTime = ( new Date() ).getTime();
-                if( gCubeControlModeStartTime[ item ] === 0 ){
-                    // no operatoin.
-                }else if( gCubeControlModeStartTime[ item ] === undefined ){
-                    gCubeControlModeStartTime[ item ] = currentTime;
-                }else{
-                    if( currentTime - gCubeControlModeStartTime[ item ] > HOLD_TIME_TO_CHANGE_CUBE_CONTROL_MODE_MSEC ){
-                        // Button hold for a long time enough
-                        console.log( 'Button hold.' );
-                        resetAll();
-                        gCubeControlModeStartTime[ item ] = 0;
-                        gCubeControlMode = CUBE_CONTROL_MODE_DOUBLE;
-
-                        if( gCurrentGamePadIndices[0] !== item ){
-
-                            // Exchange 0 to 1
-                            [ gCurrentGamePadIndices[0], gCurrentGamePadIndices[1] ] 
-                                = [ gCurrentGamePadIndices[1], gCurrentGamePadIndices[0] ];
-
-                            // Then, set this item 1st.
-                            gCurrentGamePadIndices[0] = item;
-
-                        }
-
-                        vibrateGamePadLong( gamePad );
-                        gGamePadIndex = item;
-
-                    }
-                }
-            }else{
-                gCubeControlModeStartTime[ item ] = undefined;
-            }
+            transitToDoubleCubeControlMode( item );
+            
         }
     }
     
 }
 
+// -- Select game pad as controller
+const selectGamePad = ( idGamepad ) => {
+    
+    const gCGPI = gCurrentGamePadIndices;
+    if( gCGPI.indexOf( idGamepad ) !== -1 ){
+        // This item is aleady in this array.
+        // exchange 0 to 1
+        [ gCGPI[0], gCGPI[1] ] = [ gCGPI[1], gCGPI[0] ];
+
+    }else{
+
+        // 1st, search for vacant slot.
+        if( gCGPI[0] === undefined ){
+            gCGPI[0] = idGamepad;
+            if( document.getElementById( "btConnectCube1" ).disabled === false ){
+                gCubes[0] = connectNewCube();
+            }
+        }else if( gCGPI[1] === undefined ){
+            gCGPI[1] = idGamepad;
+            if( document.getElementById( "btConnectCube2" ).disabled === false ){
+                gCubes[1] = connectNewCube();
+            }
+        }else{
+            // slots are full.
+            // set this to 0
+            gCGPI[1] = gCGPI[0];
+            gCGPI[0] = idGamepad;
+        }
+
+    }
+
+    const gamePad = navigator.getGamepads()[ idGamepad ];
+    vibrateGamePad( gamePad, gCGPI[0] !== idGamepad );
+    gCubeControlMode = CUBE_CONTROL_MODE_SINGLE;
+
+}
+
+// -- Switch cube control mode to 'Double'
+let gCubeControlModeStartTime = [ undefined, undefined ];
+const transitToDoubleCubeControlMode = ( idGamepad ) => {
+
+    const gamePad = navigator.getGamepads()[ idGamepad ];
+    const GAMEPAD_BT_HOME = 16;
+    const currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
+    const gCCMST = gCubeControlModeStartTime;
+
+    if( currentHomeButtonStatus === 1 ){
+
+        const currentTime = ( new Date() ).getTime();
+        
+        if( gCCMST[ idGamepad ] === 0 ){
+            // no operatoin.
+        }else if( gCCMST[ idGamepad ] === undefined ){
+            gCCMST[ idGamepad ] = currentTime;
+        }else{
+            const HOLD_TIME = 500; // msec
+            if( currentTime - gCCMST[ idGamepad ] > HOLD_TIME ){
+
+                // Button hold for a long time enough
+                // console.log( 'Button hold.' );
+                resetAll();
+                gCCMST[ idGamepad ] = 0;
+                gCubeControlMode = CUBE_CONTROL_MODE_DOUBLE;
+
+                const gCGPI = gCurrentGamePadIndices;
+                if( gCGPI[0] !== idGamepad ){
+
+                    // Exchange 0 to 1
+                    [ gCGPI[0], gCGPI[1] ] = [ gCGPI[1], gCGPI[0] ];
+
+                    // Then, set this item 1st.
+                    gCGPI[0] = idGamepad;
+
+                }
+                vibrateGamePadLong( gamePad );
+
+            }
+        }
+
+    }else{
+        gCCMST[ idGamepad ] = undefined;
+    }
+    
+}
+
+// -- Vibrate functions
+// --- Interface
 const vibrateGamePad = ( gamePad, isTwice ) => {
 
     const INTERVAL = 200; // msec
@@ -205,41 +168,23 @@ const vibrateGamePad = ( gamePad, isTwice ) => {
 
 }
 
-const vibrateGamePadOnce = ( gamePad ) => {
+// -- Single vibration.
+const vibrateGamePadOnce = ( gamePad ) => { _vibrateGamePad( gamePad, 150 ); }
+
+// -- Long and single vibration.
+const vibrateGamePadLong = ( gamePad ) => { _vibrateGamePad( gamePad, 500 ); }
+
+// Actual vibration function
+const _vibrateGamePad = ( gamePad, duration ) => {
 
     if ( gamePad.vibrationActuator ) {
+
         gamePad.vibrationActuator.playEffect( "dual-rumble", { 
-            duration: 150, 
+            duration: duration, 
             weakMagnitude: 1.0,
             strongMagnitude: 1.0 
         } );
-    }
 
-}
-
-const vibrateGamePadLong = ( gamePad ) => {
-
-    if ( gamePad.vibrationActuator ) {
-        gamePad.vibrationActuator.playEffect( "dual-rumble", { 
-            duration: 500, 
-            weakMagnitude: 1.0,
-            strongMagnitude: 1.0 
-        } );
-    }
-
-}
-
-// Procedure on Key Down
-const procKeyDown = ( code ) => {
-
-    if( code === KEYCODE_Q ){
-        exchangeCubes();
-    }else if( code === KEYCODE_ESC ){
-        allReset();
-    }else if( code === KEYCODE_PLUS ){
-        plusMaxSpeed();
-    }else if( code === KEYCODE_MINUS ){
-        minusMaxSpeed();
     }
 
 }
@@ -258,9 +203,6 @@ const gInputStatus = [{
     reset:0.0,
     minusMaxSpeed:0.0,
     plusMaxSpeed:0.0,
-    connectCube1:0.0,
-    connectCube2:0.0,
-    analogMoveDisable:0.0,
     leftTrigger:0.0,
     rightTrigger:0.0,
 }, {
@@ -276,13 +218,9 @@ const gInputStatus = [{
     reset:0.0,
     minusMaxSpeed:0.0,
     plusMaxSpeed:0.0,
-    connectCube1:0.0,
-    connectCube2:0.0,
-    analogMoveDisable:0.0,
     leftTrigger:0.0,
     rightTrigger:0.0,
 }];
-
 
 // Register into InputStatus
 const registerInput = () => {
@@ -313,82 +251,53 @@ const registerInput = () => {
         const gamePad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
         const gISItem = gInputStatus[ index ];
 
-        gISItem.xAxisLeftBeforeAdjust = undefined;
-        gISItem.yAxisLeftBeforeAdjust = undefined;
+        
+        if( gamePad ){
+            
+            // X Axis of Left Analog Stick.
+            if( ( gOperationModeIndexArray[ index ] === 1 ) &&
+                ( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ) ){
+                // Single && Stick control 
+                gISItem.xAxisLeft = gISItem.xAxisRight;
+            }else{
+                if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
+                    gISItem.xAxisLeft = -1;
+                }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
+                    gISItem.xAxisLeft = 1;
+                }else{
+                    gISItem.xAxisLeft = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
+                }
+            }
 
-        // X Axis of Left Analog Stick.
-        if( getKeyInputValue( KEYCODE_LEFT ) ){
-            if( index === 0 ){ gISItem.xAxisLeft = -1; }
-        }else if( getKeyInputValue( KEYCODE_RIGHT ) ){
-            if( index === 0 ){ gISItem.xAxisLeft = 1; }
-        }else{
-            if( gamePad ){
-                
+            // Y Axis of Left Analog Stick.
+            if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
+                gISItem.yAxisLeft = 1;
+            }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
+                gISItem.yAxisLeft = -1;
+            }else{
+                gISItem.yAxisLeft = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
                 if( ( gOperationModeIndexArray[ index ] === 1 ) &&
                     ( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ) ){
-                        gISItem.xAxisLeft = gISItem.xAxisRight;
-                    }else{
-
-                        if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
-                            gISItem.xAxisLeft = -1;
-                        }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
-                            gISItem.xAxisLeft = 1;
-                        }else{
-                            gISItem.xAxisLeft = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
-                        }
-
+                    // Single && Stick control 
+                    if( isValidAnalogValue( gamePad.buttons[ GAMEPAD_BT_L2 ].value ) ){ 
+                        gISItem.yAxisLeft = gamePad.buttons[ GAMEPAD_BT_L2 ].value;
+                    }else if( isValidAnalogValue( gamePad.buttons[ GAMEPAD_BT_R2 ].value ) ){ 
+                        gISItem.yAxisLeft = -1 * gamePad.buttons[ GAMEPAD_BT_R2 ].value;
                     }
-
-            }else{
-                gISItem.xAxisLeft = 0;
-            }
-        }
-        
-        // Y Axis of Left Analog Stick.
-        if( getKeyInputValue( KEYCODE_UP ) ){
-            if( index === 0 ){ gISItem.yAxisLeft = 1; }
-        }else if( getKeyInputValue( KEYCODE_DOWN ) ){
-            if( index === 0 ){ gISItem.yAxisLeft = -1; }
-        }else{
-            if( gamePad ){
-
-                
-
-                if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
-                    gISItem.yAxisLeft = 1;
-                }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
-                    gISItem.yAxisLeft = -1;
-                }else{
-
-                    gISItem.yAxisLeft = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
-                    if( gOperationModeIndexArray[ index ] === 1 ){
-                        if( isValidAnalogValue( gamePad.buttons[ GAMEPAD_BT_L2 ].value ) ){ 
-                            gISItem.yAxisLeft = gamePad.buttons[ GAMEPAD_BT_L2 ].value;
-                        }else if( isValidAnalogValue( gamePad.buttons[ GAMEPAD_BT_R2 ].value ) ){ 
-                            gISItem.yAxisLeft = -1 * gamePad.buttons[ GAMEPAD_BT_R2 ].value;
-                        }
-                    }
-
                 }
-
-            }else{
-                gISItem.yAxisLeft = 0;
             }
-        }
 
-        // Adjust output value outside of the circle for left analog stick.
-        if( Math.pow( gISItem.xAxisLeft, 2 ) + Math.pow( gISItem.yAxisLeft, 2 ) > 1 ){
-            const angle = Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft );
-            gISItem.xAxisLeftBeforeAdjust = gISItem.xAxisLeft;
-            gISItem.yAxisLeftBeforeAdjust = gISItem.yAxisLeft;
-            gISItem.xAxisLeft = Math.cos( angle );
-            gISItem.yAxisLeft = Math.sin( angle );
-        }else{
-            gISItem.xAxisLeftBeforeAdjust = undefined;
-            gISItem.yAxisLeftBeforeAdjust = undefined;
-        }
-
-        if( gamePad ){
+            // Adjust output value outside of the circle for left analog stick.
+            if( Math.pow( gISItem.xAxisLeft, 2 ) + Math.pow( gISItem.yAxisLeft, 2 ) > 1 ){
+                const angle = Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft );
+                gISItem.xAxisLeftBeforeAdjust = gISItem.xAxisLeft;
+                gISItem.yAxisLeftBeforeAdjust = gISItem.yAxisLeft;
+                gISItem.xAxisLeft = Math.cos( angle );
+                gISItem.yAxisLeft = Math.sin( angle );
+            }else{
+                gISItem.xAxisLeftBeforeAdjust = undefined;
+                gISItem.yAxisLeftBeforeAdjust = undefined;
+            }
 
             // X Axis of Right Analog Stick.
             if( gamePad.buttons[ GAMEPAD_BT_2 ].value ){
@@ -415,9 +324,6 @@ const registerInput = () => {
                 gISItem.yAxisRight = Math.sin( angle );
             }
 
-            // Speed lever / Change button
-            gISItem.maxSpeed = CUBE_SPEC_MAX_SPEED * gamePad.buttons[ GAMEPAD_BT_L2 ].value / 100;
-
             // Exchange Cube1/Cube2 button
             gISItem.exchangeCubes = gamePad.buttons[ GAMEPAD_BT_9 ].value; 
 
@@ -431,15 +337,14 @@ const registerInput = () => {
             gISItem.minusMaxSpeed = gamePad.buttons[ GAMEPAD_BT_L1 ].value;
             gISItem.plusMaxSpeed  = gamePad.buttons[ GAMEPAD_BT_R1 ].value;
 
-            // Analog Omni-direction movement
-            gISItem.analogMoveDisable = gamePad.buttons[ GAMEPAD_BT_0 ].value;
-
             // Left/Right trigger
             gISItem.leftTrigger = gamePad.buttons[ GAMEPAD_BT_L2 ].value;
             gISItem.rightTrigger = gamePad.buttons[ GAMEPAD_BT_R2 ].value;
 
         }else{
 
+            gISItem.xAxisLeft = 0;
+            gISItem.yAxisLeft = 0;
             gISItem.xAxisRight = 0;
             gISItem.yAxisRight = 0;
             gISItem.exchangeCubes = 0;
@@ -447,7 +352,6 @@ const registerInput = () => {
             gISItem.reset = 0;
             gISItem.minusMaxSpeed = 0;
             gISItem.plusMaxSpeed = 0;
-            gISItem.analogMoveDisable = 0;
             gISItem.leftTrigger = 0;
             gISItem.rightTrigger = 0;
 
@@ -462,7 +366,7 @@ let gPreviousExecuteTime = undefined;
 
 const updateStatus = () => {
 
-    selectGamePad();
+    handleHomeButton();
     registerInput();
     opSettings();
 
@@ -494,6 +398,7 @@ const updateStatus = () => {
     }
 
     window.requestAnimationFrame( updateStatus );
+
 }
 
 const executeCubeCommand = () => {
@@ -510,10 +415,10 @@ const executeSingleCubeCommand = () => {
         
         const gISItem = gInputStatus[ index ];
 
-        // Move/Rotation
         if( gOperationModeIndexArray[ index ] === 0 ) {
+            // Single Normal control mode
             if( isValidAnalogValue( gISItem.xAxisRight ) ){
-                // rotation mode
+                // rotation
                 opRotation( index );
                 // console.log( "rotation");
             }else{
@@ -524,11 +429,10 @@ const executeSingleCubeCommand = () => {
                 }
             }
         }else if( gOperationModeIndexArray[ index ] === 1 ) {
-             
+            // Single Stick control mode
             if( isValidAnalogValue( gISItem.yAxisLeft ) ){ 
                 opMove( index, index );
             }
-
         }
 
     }
@@ -543,20 +447,27 @@ const executeDoubleCubeCommand = () => {
 
     if( gamepad ){
 
+        // Cube 1 procedure
         if( isValidAnalogValue( gISItem_0.xAxisLeft ) || isValidAnalogValue( gISItem_0.yAxisLeft ) ){ 
             if( gOperationModeIndexArray[ 0 ] === 0 ){
+                // Double combined control
                 opMove( 0, 0 );
             }else{
+                // Double separated control
                 opMoveSeparated( 0, 0 );
             }
         }
 
+        // Cube 2 procedure
         if( isValidAnalogValue( gISItem_0.xAxisRight ) || isValidAnalogValue( gISItem_0.yAxisRight ) ){
+            // Use input status 1 tentatively for controlling 
             gISItem_1.xAxisLeft = gISItem_0.xAxisRight;
             gISItem_1.yAxisLeft = gISItem_0.yAxisRight;
             if( gOperationModeIndexArray[ 0 ] === 0 ){
+                // Double combined control
                 opMove( 1, 1 );
             }else{
+                // Double separated control
                 opMoveSeparated( 1, 1 );
             }
         }
@@ -564,7 +475,6 @@ const executeDoubleCubeCommand = () => {
     }
     
 }
-
 
 
 // Operations
@@ -575,7 +485,6 @@ let gPreviousSwitchOperationMode = [ 0.0, 0.0 ];
 let gPreviousReset = [ 0.0, 0.0 ];
 let gPreviousMinusMaxSpeed = [ 0.0, 0.0 ];
 let gPreviousPlusMaxSpeed = [ 0.0, 0.0 ];
-let gChangeSpeedMode = [ 0, 0 ];
 
 const opSettings = () => {
 
@@ -583,7 +492,7 @@ const opSettings = () => {
             
         const gISItem = gInputStatus[ index ];
 
-        // Head/Tail cube setting
+        // Exchange Cube1/2
         if( gISItem.exchangeCubes === 1 ){
             if( gPreviousExchangeCubes[ index ] === 0 ){
                 // Exchange 0/1 gCubes
@@ -627,47 +536,46 @@ const opSettings = () => {
         }
         gPreviousPlusMaxSpeed[ index ] = gISItem.plusMaxSpeed;
 
-
     }
 
 }
 
-// Operation for Rotation around center
+// Operation for Rotation
 const opRotation = ( index ) => {
     const gISItem = gInputStatus[ index ];
-    const unitSpeed = Math.round( gMaxSpeed[index] * 100 * gISItem.xAxisRight ) / 2;
+    const unitSpeed = Math.round( gMaxSpeed[ index ] * 100 * gISItem.xAxisRight ) / 2;
     setMotorSpeed( gCubes[ index ], unitSpeed, -1 * unitSpeed );
 }
 
-
-// Operation for normal move
+// Move operation for normal contorl mode
 const opMove = ( cubeIndex, gamePadIndex ) => {
 
     const gISItem = gInputStatus[ gamePadIndex ];
-    const magnitude = gMaxSpeed[ gamePadIndex ] * 100 * Math.sqrt( gISItem.xAxisLeft * gISItem.xAxisLeft + gISItem.yAxisLeft * gISItem.yAxisLeft );
+    const magnitude = gMaxSpeed[ gamePadIndex ] * 100 * 
+                        Math.sqrt( Math.pow( gISItem.xAxisLeft, 2 ) + Math.pow( gISItem.yAxisLeft, 2 ) );
     // console.log( magnitude );
 
     let angle;
-    if( gISItem.analogMoveDisable === 1 ){
-        angle = Math.round( 4 * Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft) / Math.PI ) * Math.PI/4;
-    }else{
-        angle = Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft );
-    }
+    angle = Math.atan2( gISItem.yAxisLeft, gISItem.xAxisLeft );
     
     // console.log( angle );
     let left, right;
 
-    // Forward 
     if( Math.abs( angle - Math.PI/2 ) < Math.PI/9 ){
+        // Locked for Forward 
         left  = Math.round( magnitude );
         right = Math.round( magnitude );
     }else if( Math.abs( angle + Math.PI/2 ) < Math.PI/9 ){
+        // Locked for Backward 
         left  = -1 * Math.round( magnitude );
         right = -1 * Math.round( magnitude );
     }else if( Math.abs( angle ) < Math.PI/18 ){
+        // Locked for turning clockwise
         left  = Math.round( magnitude );
         right = Math.round( 0 );
-    }else if( ( Math.abs( angle + Math.PI ) < Math.PI/18 ) || ( Math.abs( angle - Math.PI ) < Math.PI/18 ) ){
+    }else if( ( Math.abs( angle + Math.PI ) < Math.PI/18 ) || 
+              ( Math.abs( angle - Math.PI ) < Math.PI/18 ) ){
+        // Locked for turning counter-clockwise
         left  = Math.round( 0 );
         right = Math.round( magnitude );
     }else{
@@ -694,21 +602,28 @@ const opMove = ( cubeIndex, gamePadIndex ) => {
 
 }
 
-
+// Move operation for separated contorl mode
 const opMoveSeparated = ( cubeIndex, gamePadIndex ) => {
 
     const gISItem = gInputStatus[ gamePadIndex ];
     const gISItem_0 = gInputStatus[ 0 ];
 
     if( gamePadIndex === 0 ){
+
+        // Store original values for canvas drawing.
         gISItem.xAxisLeftBeforeAdjust = gISItem.xAxisLeft;
         gISItem.yAxisLeftBeforeAdjust = gISItem.yAxisLeft;
         
+        // Left side gamepad. Rotate by Math.PI/2 counter-clockwise.
         [ gISItem.xAxisLeft, gISItem.yAxisLeft ] 
             = [ -1 * gISItem.yAxisLeft, gISItem.xAxisLeft ];
+
     }else{
+
+        // Right side gamepad. Rotate by Math.PI/2 clockwise.
         [ gISItem.xAxisLeft, gISItem.yAxisLeft ] 
             = [ gISItem_0.yAxisRight, -1 * gISItem_0.xAxisRight ];
+
     }
 
     opMove( cubeIndex, gamePadIndex );
@@ -742,22 +657,19 @@ const opStickMove = ( index ) => {
 
 }
 
-
 // Operation for no command
 const opNoCommand = () => {
-
+    // Of course, no operation...
 }
 
 
 // Sub-Functions
 const setMaxSpeed = ( index, speed ) => {
-
-    gMaxSpeed[index] = speed;
-
+    gMaxSpeed[ index ] = speed;
 }
 
 const plusMaxSpeed = ( index ) => {
-    let speed = gMaxSpeed[index] + 0.05;
+    let speed = gMaxSpeed[ index ] + 0.05;
     if( speed > 1.15 ){
         speed = 1.15;
     }
@@ -791,17 +703,18 @@ const exchangeCubes = () => {
 
 const switchOperationMode = ( index ) => {
 
-    gOperationModeIndexArray[ index ]++;
-    if( gOperationModeIndexArray[ index ] > OPE_MODES_NAME_ARRAY_SINGLE.length - 1 ){
-        gOperationModeIndexArray[ index ] = 0;
+    const gOMIA = gOperationModeIndexArray;
+    gOMIA[ index ]++;
+    if( gOMIA[ index ] > gOMIA.length - 1 ){
+        gOMIA[ index ] = 0;
     }
 
 }
 
-const lightHeadCube = () => { turnOnLightWhiteBriefly( gCubes[0] ); }
+const lightHeadCube = () => { turnOnLightWhiteBriefly( gCubes[ 0 ] ); }
 
-const reset = ( index ) => { setMaxSpeed( index, DEFAULT_SPEED ); gOperationModeIndexArray[index] = 0; }
-const resetAll = () => { reset(0); reset(1); }
+const reset = ( index ) => { setMaxSpeed( index, DEFAULT_SPEED ); gOperationModeIndexArray[ index ] = 0; }
+const resetAll = () => { reset( 0 ); reset( 1 ); }
 
 const isValidAnalogValue = ( value ) => {
 
@@ -962,34 +875,50 @@ const drawBackground = ( context, canvas ) => {
 
 }
 
+// -- Draw Background for Single control mode
 const drawBackgroundSingle = ( context, canvas ) => {
 
     const ctx = context;
     canvas.width = 400;
     canvas.height = 300;
     ctx.save();
+
+    // Blue region
     ctx.fillStyle = "rgba( 0, 148, 170, 1 )" ;    
     ctx.fillRect( 0, 0, canvas.width, canvas.height/2 );
+    
+    // Green region
     ctx.fillStyle = "rgba( 146, 168, 0, 1 )" ;    
     ctx.fillRect( 0, canvas.height/2, canvas.width, canvas.height/2 );
+    
     ctx.restore();
 
 }
 
+// -- Draw Background for Double control mode
 const drawBackgroundDouble = ( context, canvas ) => {
 
     const ctx = context;
     canvas.width = 400;
     canvas.height = 300;
     ctx.save();
+
+    // Upper half background grey
     ctx.fillStyle = "rgba( 192, 192, 192, 1 )" ;
     ctx.fillRect( 0, 0, canvas.width, canvas.height/2 );
+
+    // Title band
     ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
     ctx.fillRect( 0, 0, canvas.width, canvas.height/8 );
+
+    // Lower Blue region
     ctx.fillStyle = "rgba( 0, 148, 170, 1 )" ;
     ctx.fillRect( 0, canvas.height/2, canvas.width/2, canvas.height/2 );
+    
+    // Lower Green region
     ctx.fillStyle = "rgba( 146, 168, 0, 1 )" ;
     ctx.fillRect( canvas.width/2, canvas.height/2, canvas.width/2, canvas.height/2 );
+    
     ctx.restore();
 
 } 
@@ -1006,22 +935,44 @@ const drawAnalogLeft = ( index, context, canvas ) => {
 }
 
 const drawAnalogLeftSingle = ( index, context, canvas ) => {
-
-    drawAnalogStateSingle( -10, 0, index, context, canvas, true );
-
+    const X_OFFSET = -10;
+    drawAnalogStateSingle( X_OFFSET, 0, index, context, canvas, true );
 }
 
 const drawAnalogLeftDouble = ( index, context, canvas ) => {
-    
     if( index === 0 ){
         drawAnalogStateDouble( 0, 0, context, canvas, true );
+    }
+}
+
+// -- Draw the state of right analog stick
+const drawAnalogRight = ( index, context, canvas ) => {
+
+    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
+        drawAnalogRightSingle( index, context, canvas );
+    }else{
+        drawAnalogRightDouble( index, context, canvas );
     }
 
 }
 
+const drawAnalogRightSingle = ( index, context, canvas ) => {
+    const X_OFFSET = canvas.width/3 - 18;
+    drawAnalogStateSingle( X_OFFSET, 0, index, context, canvas, false );
+}
+
+const drawAnalogRightDouble = ( index, context, canvas ) => {
+    const X_OFFSET = canvas.width/2;
+    if( index === 0 ){
+        drawAnalogStateDouble( X_OFFSET, 0, context, canvas, false );
+    }
+}
+
+// -- Draw analog status core function for Single
 const drawAnalogStateSingle = ( offsetX, offsetY, index, context, canvas, isLeft ) => {
 
     const SQUARE_SIZE = 100;
+    const HALF_SQUARE_SIZE = SQUARE_SIZE / 2;
     const OFFSET = 10;
 
     const ctx = context;
@@ -1030,22 +981,21 @@ const drawAnalogStateSingle = ( offsetX, offsetY, index, context, canvas, isLeft
     ctx.strokeStyle = "rgba( 255, 255, 255, 0.6 )" ;
 
     // Rect for rim
-    ctx.strokeRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
-        SQUARE_SIZE, SQUARE_SIZE );
-    ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
-        SQUARE_SIZE, SQUARE_SIZE );
+    const RECT_X = canvas.width/3 - SQUARE_SIZE + offsetX;
+    const RECT_Y = canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET;
+    ctx.strokeRect( RECT_X, RECT_Y, SQUARE_SIZE, SQUARE_SIZE );
+    ctx.fillRect( RECT_X, RECT_Y, SQUARE_SIZE, SQUARE_SIZE );
     
     // Circle
     ctx.beginPath();
-    ctx.arc( canvas.width/3 - SQUARE_SIZE / 2 + offsetX, 
-        canvas.height/2 * ( index + 1 ) - SQUARE_SIZE / 2 - OFFSET,
-        SQUARE_SIZE / 2, 0, Math.PI * 2 );
+    ctx.arc( RECT_X + HALF_SQUARE_SIZE, RECT_Y + HALF_SQUARE_SIZE, 
+                                        HALF_SQUARE_SIZE, 0, Math.PI * 2 );
     
     // Center lines
-    ctx.moveTo( canvas.width/3 - SQUARE_SIZE / 2 + offsetX, canvas.height/2 * ( index + 1 )- SQUARE_SIZE - OFFSET );
-    ctx.lineTo( canvas.width/3 - SQUARE_SIZE / 2 + offsetX, canvas.height/2 * ( index + 1 ) - OFFSET );
-    ctx.moveTo( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET );
-    ctx.lineTo( canvas.width/3 + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET );
+    ctx.moveTo( RECT_X + HALF_SQUARE_SIZE, RECT_Y );
+    ctx.lineTo( RECT_X + HALF_SQUARE_SIZE, RECT_Y + SQUARE_SIZE );
+    ctx.moveTo( RECT_X,                    RECT_Y + HALF_SQUARE_SIZE );
+    ctx.lineTo( RECT_X + SQUARE_SIZE,      RECT_Y + HALF_SQUARE_SIZE );
     ctx.stroke();
 
     // Pointer
@@ -1076,8 +1026,8 @@ const drawAnalogStateSingle = ( offsetX, offsetY, index, context, canvas, isLeft
         }
     }
 
-    ctx.arc( canvas.width/3 - SQUARE_SIZE / 2  + offsetX + xAxis * SQUARE_SIZE / 2, 
-                canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET - yAxis * SQUARE_SIZE / 2, 
+    ctx.arc( RECT_X + HALF_SQUARE_SIZE + xAxis * HALF_SQUARE_SIZE, 
+                RECT_Y + HALF_SQUARE_SIZE - yAxis * HALF_SQUARE_SIZE, 
                     RADIUS, 0, 2 * Math.PI, false );
     
     ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )";
@@ -1086,29 +1036,29 @@ const drawAnalogStateSingle = ( offsetX, offsetY, index, context, canvas, isLeft
 
     // Gray out
     if( gOperationModeIndexArray[ index ] === 1 ){
+
+        // Single Stick control mode.
+        ctx.fillStyle = "rgba( 0, 0, 0, 0.3 )" ;
+        
         if( isLeft ){        
-            ctx.fillStyle = "rgba( 0, 0, 0, 0.3 )" ;
-            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
-                SQUARE_SIZE * 2 / 5, SQUARE_SIZE );
-            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX + SQUARE_SIZE * 3 / 5, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
-                SQUARE_SIZE * 2 / 5, SQUARE_SIZE );
+            ctx.fillRect( RECT_X, RECT_Y, SQUARE_SIZE * 2 / 5, SQUARE_SIZE );
+            ctx.fillRect( RECT_X + SQUARE_SIZE * 3 / 5, RECT_Y, SQUARE_SIZE * 2 / 5, SQUARE_SIZE );
         }else{
-            ctx.fillStyle = "rgba( 0, 0, 0, 0.3 )" ;
-            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
-                SQUARE_SIZE, SQUARE_SIZE * 2 / 5 );
-            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET + SQUARE_SIZE * 3 / 5, 
-                SQUARE_SIZE, SQUARE_SIZE * 2 / 5 );
+            ctx.fillRect( RECT_X, RECT_Y, SQUARE_SIZE, SQUARE_SIZE * 2 / 5 );
+            ctx.fillRect( RECT_X, RECT_Y + SQUARE_SIZE * 3 / 5, SQUARE_SIZE, SQUARE_SIZE * 2 / 5 );
         }
+        
     }
     
-
     ctx.restore();
 
 }
 
+// -- Draw analog status core function for Double
 const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
 
     const SQUARE_SIZE = 100;
+    const HALF_SQUARE_SIZE = SQUARE_SIZE / 2;
     const OFFSET = 10;
 
     const ctx = context;
@@ -1117,22 +1067,21 @@ const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
     ctx.strokeStyle = "rgba( 255, 255, 255, 0.6 )" ;
 
     // Rect for rim
-    ctx.strokeRect( canvas.width/8 + offsetX, canvas.height/2 * 2 - SQUARE_SIZE - OFFSET, 
-        SQUARE_SIZE, SQUARE_SIZE );
-    ctx.fillRect( canvas.width/8 + offsetX, canvas.height/2 * 2 - SQUARE_SIZE - OFFSET, 
-        SQUARE_SIZE, SQUARE_SIZE );
+    const RECT_X = canvas.width/8 + offsetX;
+    const RECT_Y = canvas.height/2 * 2 - SQUARE_SIZE - OFFSET;
+    ctx.strokeRect( RECT_X, RECT_Y, SQUARE_SIZE, SQUARE_SIZE );
+    ctx.fillRect( RECT_X, RECT_Y, SQUARE_SIZE, SQUARE_SIZE );
     
     // Circle
     ctx.beginPath();
-    ctx.arc( canvas.width/8 + offsetX + SQUARE_SIZE / 2, 
-        canvas.height/2 * 2 - SQUARE_SIZE / 2 - OFFSET,
-        SQUARE_SIZE / 2, 0, Math.PI * 2 );
+    ctx.arc( RECT_X + HALF_SQUARE_SIZE, RECT_Y + HALF_SQUARE_SIZE,
+                HALF_SQUARE_SIZE, 0, Math.PI * 2 );
     
     // Center lines
-    ctx.moveTo( canvas.width/4 + offsetX, canvas.height/2 * 2- SQUARE_SIZE - OFFSET );
-    ctx.lineTo( canvas.width/4 + offsetX, canvas.height/2 * 2 - OFFSET );
-    ctx.moveTo( canvas.width/8 + offsetX, canvas.height/2 * 2 - SQUARE_SIZE/2 - OFFSET );
-    ctx.lineTo( canvas.width/8 + SQUARE_SIZE + offsetX, canvas.height/2 * 2 - SQUARE_SIZE/2 - OFFSET );
+    ctx.moveTo( RECT_X + HALF_SQUARE_SIZE, RECT_Y );
+    ctx.lineTo( RECT_X + HALF_SQUARE_SIZE, RECT_Y + SQUARE_SIZE );
+    ctx.moveTo( RECT_X,                    RECT_Y + HALF_SQUARE_SIZE );
+    ctx.lineTo( RECT_X + SQUARE_SIZE,      RECT_Y + HALF_SQUARE_SIZE );
     ctx.stroke();
 
     // Pointer
@@ -1159,6 +1108,7 @@ const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
     }
 
     if( gOperationModeIndexArray[ 0 ] === 1 ){
+        // Double Separated control mode
         if( isLeft ){
             [ xAxis, yAxis ] = [ -1 * yAxis, xAxis ];
         }else{
@@ -1166,10 +1116,10 @@ const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
         }
     }
 
-    ctx.arc( canvas.width/8 + SQUARE_SIZE / 2 + offsetX + xAxis * SQUARE_SIZE / 2, 
-                canvas.height/2 * 2 - SQUARE_SIZE/2 - OFFSET - yAxis * SQUARE_SIZE / 2, 
-                    RADIUS, 0, 2 * Math.PI, false );
-    
+    ctx.arc( RECT_X + HALF_SQUARE_SIZE + xAxis * HALF_SQUARE_SIZE, 
+            RECT_Y + HALF_SQUARE_SIZE - yAxis * HALF_SQUARE_SIZE, 
+                RADIUS, 0, 2 * Math.PI, false );
+
     ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )";
     ctx.fill();
     ctx.closePath();
@@ -1177,32 +1127,6 @@ const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
     ctx.restore();
 
 }
-
-// -- Draw the state of right analog stick. ONLY for x-axis
-const drawAnalogRight = ( index, context, canvas ) => {
-
-    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
-        drawAnalogRightSingle( index, context, canvas );
-    }else{
-        drawAnalogRightDouble( index, context, canvas );
-    }
-
-}
-
-const drawAnalogRightSingle = ( index, context, canvas ) => {
-
-    drawAnalogStateSingle( canvas.width/3 - 18, 0, index, context, canvas, false );
-
-}
-
-const drawAnalogRightDouble = ( index, context, canvas ) => {
-
-    if( index === 0 ){
-        drawAnalogStateDouble( canvas.width/2, 0, context, canvas, false );
-    }
-
-}
-
 
 // -- Draw connection status panel
 const cubeImage = new Image();
@@ -1232,6 +1156,7 @@ const drawConnectionStateSingle = ( index, context, canvas ) => {
     if( !isReady4Control( index ) ){
         // Not Ready yet. so this panel is needed.
 
+        // Back ground
         ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
         ctx.fillRect( 0, index * canvas.height / 2, canvas.width, canvas.height / 2 );
         
@@ -1249,7 +1174,8 @@ const drawConnectionStateSingle = ( index, context, canvas ) => {
             image = cubeImage;
             ctx.globalAlpha = 0.3;
         }
-        ctx.drawImage( image, canvas.width/3 - CUBE_SIZE/2, ( 2 * index + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
+        const IMAGE_Y = ( 2 * index + 1 ) * canvas.height/4 - CUBE_SIZE/2;
+        ctx.drawImage( image, canvas.width/3 - CUBE_SIZE/2, IMAGE_Y, CUBE_SIZE, CUBE_SIZE );
 
         // For game pad status
         if( gCurrentGamePadIndices[index] !== undefined ){
@@ -1257,7 +1183,7 @@ const drawConnectionStateSingle = ( index, context, canvas ) => {
         }else{
             ctx.globalAlpha = 0.3;
         }
-        ctx.drawImage( controllerImage, canvas.width/3 + CUBE_SIZE/2, ( 2 * index + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
+        ctx.drawImage( controllerImage, canvas.width/3 + CUBE_SIZE/2, IMAGE_Y, CUBE_SIZE, CUBE_SIZE );
 
     }
     ctx.restore();
@@ -1292,7 +1218,8 @@ const drawConnectionStateDouble = ( context, canvas ) => {
                 ctx.globalAlpha = 0.3;
                 image = cubeImage;
             }
-            ctx.drawImage( image, ( 2 * index + 1 ) * canvas.width/4 - CUBE_SIZE/2, 3 * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
+            ctx.drawImage( image, ( 2 * index + 1 ) * canvas.width/4 - CUBE_SIZE/2, 
+                                    3 * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
 
         }
 
@@ -1302,7 +1229,8 @@ const drawConnectionStateDouble = ( context, canvas ) => {
         }else{
             ctx.globalAlpha = 0.3;
         }
-        ctx.drawImage( controllerImage, canvas.width/2 - CUBE_SIZE/2, canvas.height/8 + 20, CUBE_SIZE, CUBE_SIZE );
+        ctx.drawImage( controllerImage, canvas.width/2 - CUBE_SIZE/2, canvas.height/8 + 20, 
+                            CUBE_SIZE, CUBE_SIZE );
 
     }
     ctx.restore();
@@ -1316,13 +1244,14 @@ const drawDescription = ( index, context, canvas ) => {
     }else{
         drawDescriptionControllerDouble( context, canvas );
         if( isReady4ControlDouble() ){
-            drawDescriptionDoubleControl( context, canvas );
+            drawDescriptionDoubleMode( context, canvas );
         }
     }
 
 }
 
 const drawDescriptionControllerSingle = ( index, context, canvas ) => {
+
     const ctx = context;
     const CUBE_SIZE = 120;
     ctx.save();
@@ -1352,8 +1281,8 @@ const drawDescriptionControllerSingle = ( index, context, canvas ) => {
 }
 
 const drawDescriptionControllerDouble = ( context, canvas ) => {
+
     const ctx = context;
-    const CUBE_SIZE = 120;
     ctx.save();
     
     // Game pad's description
@@ -1375,14 +1304,13 @@ const drawDescriptionControllerDouble = ( context, canvas ) => {
     }
     ctx.font = "19px 'Noto Sans JP'";
     ctx.textAlign = 'center'
-    
     ctx.fillText( description, xPosDesc, yPosDesc );
 
     ctx.restore();
 
 }
 
-const drawDescriptionDoubleControl = ( context, canvas ) => {
+const drawDescriptionDoubleMode = ( context, canvas ) => {
 
     let description, xPosDesc, yPosDesc;
     const ctx = context;
@@ -1397,25 +1325,20 @@ const drawDescriptionDoubleControl = ( context, canvas ) => {
     yPosDesc = canvas.height / 8 - 10;
     ctx.fillText( description, xPosDesc, yPosDesc );
 
-
     ctx.font = "17px 'Noto Sans JP'";
-    ctx.textAlign = 'center'
-    ctx.fillStyle = 'rgba(255, 255, 255)';
+    yPosDesc = 3 * canvas.height / 4 - 48;
 
     description = 'Cube P';
     xPosDesc = canvas.width / 4;
-    yPosDesc = 3 * canvas.height / 4 - 48;
     ctx.fillText( description, xPosDesc, yPosDesc );
 
-    xPosDesc = 3 * canvas.width / 4;
     description = 'Cube Q';
+    xPosDesc = 3 * canvas.width / 4;
     ctx.fillText( description, xPosDesc, yPosDesc );
-
 
     ctx.restore();
 
 }
-
 
 const drawStatus = ( index, context, canvas ) => {
 
@@ -1428,8 +1351,11 @@ const drawStatus = ( index, context, canvas ) => {
 }
 
 const drawStatusSingle = ( index, context, canvas ) => {
+
     const ctx = context;
-    const CUBE_SIZE = 120;
+    const XPOS_BASE = 2 * canvas.width / 3;
+    const YPOS_BASE = canvas.height / 2 * ( index + 1 );
+
     ctx.save();
     
     ctx.font = "14px 'Noto Sans JP'";
@@ -1439,15 +1365,15 @@ const drawStatusSingle = ( index, context, canvas ) => {
     // Mode text
     let modeText = 'Op. Mode: ';
     modeText += OPE_MODES_NAME_ARRAY_SINGLE[ gOperationModeIndexArray[ index ] ];
-    let xPosMode = 2*canvas.width/3;
-    let yPosMode = canvas.height/2 * ( index + 1 ) -100;
+    let xPosMode = XPOS_BASE;
+    let yPosMode = YPOS_BASE - 100;
     ctx.fillText( modeText, xPosMode, yPosMode );
 
     // Max speed text
     let maxSpeedText = 'Max Speed: ';
     maxSpeedText += Math.round( gMaxSpeed[ index ] * 100 );
-    let xPosMaxSpeed = 2*canvas.width/3;
-    let yPosMaxSpeed = canvas.height/2 * ( index + 1 ) - 70;
+    let xPosMaxSpeed = XPOS_BASE;
+    let yPosMaxSpeed = YPOS_BASE - 70;
     ctx.fillText( maxSpeedText, xPosMaxSpeed, yPosMaxSpeed );
 
     ctx.restore();
@@ -1455,7 +1381,11 @@ const drawStatusSingle = ( index, context, canvas ) => {
 }
 
 const drawStatusDouble = ( context, canvas ) => {
+
     const ctx = context;
+    const XPOS_BASE = canvas.width / 3;
+    const YPOS_BASE = 5 * canvas.height/8;
+
     ctx.save();
     
     ctx.font = "16px 'Noto Sans JP'";
@@ -1465,15 +1395,15 @@ const drawStatusDouble = ( context, canvas ) => {
     // Mode text
     let modeText = 'Op. Mode: ';
     modeText += OPE_MODES_NAME_ARRAY_DOUBLE[ gOperationModeIndexArray[ 0 ] ];
-    let xPosMode = canvas.width/3;
-    let yPosMode = 5 * canvas.height/8 - 88;
+    let xPosMode = XPOS_BASE;
+    let yPosMode = YPOS_BASE - 88;
     ctx.fillText( modeText, xPosMode, yPosMode );
 
     // Max speed text
     let maxSpeedText = 'Max Speed: ';
     maxSpeedText += Math.round( gMaxSpeed[ 0 ] * 100 );
-    let xPosMaxSpeed = canvas.width/3;
-    let yPosMaxSpeed = 5 * canvas.height/8 - 58;
+    let xPosMaxSpeed = XPOS_BASE;
+    let yPosMaxSpeed = YPOS_BASE - 58;
     ctx.fillText( maxSpeedText, xPosMaxSpeed, yPosMaxSpeed );
 
     ctx.restore();
@@ -1609,9 +1539,7 @@ const initialize = () => {
         window.open('https://github.com/tetunori/MechanumWheelControlWebBluetooth/blob/master/README.md','_blank');
     });
 
-    setMaxSpeed( 0, DEFAULT_SPEED );
-    setMaxSpeed( 1, DEFAULT_SPEED );
-
+    resetAll();
     updateStatus();
 
 }
