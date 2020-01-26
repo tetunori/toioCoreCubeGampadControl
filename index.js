@@ -24,9 +24,12 @@ let gGamePadIndex = undefined;
 const gCubes = [ undefined, undefined ];
 
 let gOperationModeIndexArray = [ 0, 0 ];
-const MODE_A = 'Normal';
-const MODE_B = 'Stick';
-const OPE_MODES_NAME_ARRAY =  [ MODE_A, MODE_B ];
+const MODE_A_SINGLE = 'Normal';
+const MODE_B_SINGLE = 'Stick';
+const OPE_MODES_NAME_ARRAY_SINGLE =  [ MODE_A_SINGLE, MODE_B_SINGLE ];
+const MODE_A_DOUBLE = 'Combined';
+const MODE_B_DOUBLE = 'Separated';
+const OPE_MODES_NAME_ARRAY_DOUBLE =  [ MODE_A_DOUBLE, MODE_B_DOUBLE ];
 
 const CUBE_CONTROL_MODE_SINGLE = 0;
 const CUBE_CONTROL_MODE_DOUBLE = 1;
@@ -310,6 +313,9 @@ const registerInput = () => {
         const gamePad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
         const gISItem = gInputStatus[ index ];
 
+        gISItem.xAxisLeftBeforeAdjust = undefined;
+        gISItem.yAxisLeftBeforeAdjust = undefined;
+
         // X Axis of Left Analog Stick.
         if( getKeyInputValue( KEYCODE_LEFT ) ){
             if( index === 0 ){ gISItem.xAxisLeft = -1; }
@@ -317,17 +323,22 @@ const registerInput = () => {
             if( index === 0 ){ gISItem.xAxisLeft = 1; }
         }else{
             if( gamePad ){
-                if( gOperationModeIndexArray[ index ] === 0 ){
-                    if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
-                        gISItem.xAxisLeft = -1;
-                    }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
-                        gISItem.xAxisLeft = 1;
+                
+                if( ( gOperationModeIndexArray[ index ] === 1 ) &&
+                    ( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ) ){
+                        gISItem.xAxisLeft = gISItem.xAxisRight;
                     }else{
-                        gISItem.xAxisLeft = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
+
+                        if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
+                            gISItem.xAxisLeft = -1;
+                        }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
+                            gISItem.xAxisLeft = 1;
+                        }else{
+                            gISItem.xAxisLeft = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
+                        }
+
                     }
-                }else{
-                    gISItem.xAxisLeft = gISItem.xAxisRight;
-                }
+
             }else{
                 gISItem.xAxisLeft = 0;
             }
@@ -479,7 +490,7 @@ const updateStatus = () => {
         
         // Mainly for before connection
         drawConnectionState( index, ctx, canvas );
-        drawControllerDescription( index, ctx, canvas );
+        drawDescription( index, ctx, canvas );
     }
 
     window.requestAnimationFrame( updateStatus );
@@ -533,13 +544,21 @@ const executeDoubleCubeCommand = () => {
     if( gamepad ){
 
         if( isValidAnalogValue( gISItem_0.xAxisLeft ) || isValidAnalogValue( gISItem_0.yAxisLeft ) ){ 
-            opMove( 0, 0 );
+            if( gOperationModeIndexArray[ 0 ] === 0 ){
+                opMove( 0, 0 );
+            }else{
+                opMoveSeparated( 0, 0 );
+            }
         }
 
         if( isValidAnalogValue( gISItem_0.xAxisRight ) || isValidAnalogValue( gISItem_0.yAxisRight ) ){
             gISItem_1.xAxisLeft = gISItem_0.xAxisRight;
             gISItem_1.yAxisLeft = gISItem_0.yAxisRight;
-            opMove( 1, 1 );
+            if( gOperationModeIndexArray[ 0 ] === 0 ){
+                opMove( 1, 1 );
+            }else{
+                opMoveSeparated( 1, 1 );
+            }
         }
 
     }
@@ -675,6 +694,27 @@ const opMove = ( cubeIndex, gamePadIndex ) => {
 
 }
 
+
+const opMoveSeparated = ( cubeIndex, gamePadIndex ) => {
+
+    const gISItem = gInputStatus[ gamePadIndex ];
+    const gISItem_0 = gInputStatus[ 0 ];
+
+    if( gamePadIndex === 0 ){
+        gISItem.xAxisLeftBeforeAdjust = gISItem.xAxisLeft;
+        gISItem.yAxisLeftBeforeAdjust = gISItem.yAxisLeft;
+        
+        [ gISItem.xAxisLeft, gISItem.yAxisLeft ] 
+            = [ -1 * gISItem.yAxisLeft, gISItem.xAxisLeft ];
+    }else{
+        [ gISItem.xAxisLeft, gISItem.yAxisLeft ] 
+            = [ gISItem_0.yAxisRight, -1 * gISItem_0.xAxisRight ];
+    }
+
+    opMove( cubeIndex, gamePadIndex );
+
+}
+
 // Operation for trigger move
 const opTriggerMove = ( index ) => {
 
@@ -752,7 +792,7 @@ const exchangeCubes = () => {
 const switchOperationMode = ( index ) => {
 
     gOperationModeIndexArray[ index ]++;
-    if( gOperationModeIndexArray[ index ] > OPE_MODES_NAME_ARRAY.length - 1 ){
+    if( gOperationModeIndexArray[ index ] > OPE_MODES_NAME_ARRAY_SINGLE.length - 1 ){
         gOperationModeIndexArray[ index ] = 0;
     }
 
@@ -944,6 +984,8 @@ const drawBackgroundDouble = ( context, canvas ) => {
     ctx.save();
     ctx.fillStyle = "rgba( 192, 192, 192, 1 )" ;
     ctx.fillRect( 0, 0, canvas.width, canvas.height/2 );
+    ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
+    ctx.fillRect( 0, 0, canvas.width, canvas.height/8 );
     ctx.fillStyle = "rgba( 0, 148, 170, 1 )" ;
     ctx.fillRect( 0, canvas.height/2, canvas.width/2, canvas.height/2 );
     ctx.fillStyle = "rgba( 146, 168, 0, 1 )" ;
@@ -1100,11 +1142,28 @@ const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
     let xAxis = 0, yAxis = 0;
 
     if( isLeft ){
-        xAxis = gISItem.xAxisLeft;
-        yAxis = gISItem.yAxisLeft;
+        if( gISItem.xAxisLeftBeforeAdjust ){
+            xAxis = gISItem.xAxisLeftBeforeAdjust;
+        }else{
+            xAxis = gISItem.xAxisLeft;
+        }
+
+        if( gISItem.xAxisLeftBeforeAdjust ){
+            yAxis = gISItem.yAxisLeftBeforeAdjust;
+        }else{
+            yAxis = gISItem.yAxisLeft;
+        }
     }else{
         xAxis = gISItem.xAxisRight;
         yAxis = gISItem.yAxisRight;
+    }
+
+    if( gOperationModeIndexArray[ 0 ] === 1 ){
+        if( isLeft ){
+            [ xAxis, yAxis ] = [ -1 * yAxis, xAxis ];
+        }else{
+            [ xAxis, yAxis ] = [ yAxis, -1 * xAxis ];
+        }
     }
 
     ctx.arc( canvas.width/8 + SQUARE_SIZE / 2 + offsetX + xAxis * SQUARE_SIZE / 2, 
@@ -1155,6 +1214,16 @@ cubeCheckedImage.src = "./images/cube_checked.png";
 controllerImage.src = "./images/controller.png";
 
 const drawConnectionState = ( index, context, canvas ) => {
+    
+    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
+        drawConnectionStateSingle( index, context, canvas );
+    }else{
+        drawConnectionStateDouble( context, canvas );
+    }
+
+}
+
+const drawConnectionStateSingle = ( index, context, canvas ) => {
     const ctx = context;
     const CUBE_SIZE = 120;
     let image = cubeImage;
@@ -1166,7 +1235,7 @@ const drawConnectionState = ( index, context, canvas ) => {
         ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
         ctx.fillRect( 0, index * canvas.height / 2, canvas.width, canvas.height / 2 );
         
-        // For Head cube
+        // For Cube icon
         if( ( gCubes[index] !== undefined ) && ( gCubes[index].server !== undefined ) ){
             // connected & service registered
             ctx.globalAlpha = 1.0;
@@ -1195,7 +1264,65 @@ const drawConnectionState = ( index, context, canvas ) => {
 
 }
 
-const drawControllerDescription = ( index, context, canvas ) => {
+const drawConnectionStateDouble = ( context, canvas ) => {
+    const ctx = context;
+    const CUBE_SIZE = 120;
+    let image = cubeImage;
+    
+    ctx.save();
+    if( !isReady4ControlDouble() ){
+        // Not Ready yet. so this panel is needed.
+
+        ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
+        ctx.fillRect( 0, 0, canvas.width, canvas.height );
+        
+        // For Cube icon
+        for( let index of [ 0, 1 ] ){
+
+            if( ( gCubes[index] !== undefined ) && ( gCubes[index].server !== undefined ) ){
+                // connected & service registered
+                ctx.globalAlpha = 1.0;
+                image = cubeImage;
+                if( gCubes[index].lightChar !== undefined ){
+                    // ready for using.
+                    image = cubeCheckedImage;
+                }
+            }else{
+                // Not connected yet
+                ctx.globalAlpha = 0.3;
+                image = cubeImage;
+            }
+            ctx.drawImage( image, ( 2 * index + 1 ) * canvas.width/4 - CUBE_SIZE/2, 3 * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
+
+        }
+
+        // For game pad status
+        if( gCurrentGamePadIndices[0] !== undefined ){
+            ctx.globalAlpha = 1.0;
+        }else{
+            ctx.globalAlpha = 0.3;
+        }
+        ctx.drawImage( controllerImage, canvas.width/2 - CUBE_SIZE/2, canvas.height/8 + 20, CUBE_SIZE, CUBE_SIZE );
+
+    }
+    ctx.restore();
+
+}
+
+const drawDescription = ( index, context, canvas ) => {
+    
+    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
+        drawDescriptionControllerSingle( index, context, canvas );
+    }else{
+        drawDescriptionControllerDouble( context, canvas );
+        if( isReady4ControlDouble() ){
+            drawDescriptionDoubleControl( context, canvas );
+        }
+    }
+
+}
+
+const drawDescriptionControllerSingle = ( index, context, canvas ) => {
     const ctx = context;
     const CUBE_SIZE = 120;
     ctx.save();
@@ -1224,7 +1351,83 @@ const drawControllerDescription = ( index, context, canvas ) => {
 
 }
 
+const drawDescriptionControllerDouble = ( context, canvas ) => {
+    const ctx = context;
+    const CUBE_SIZE = 120;
+    ctx.save();
+    
+    // Game pad's description
+    let description = '';
+    let xPosDesc = canvas.width/2;
+    let yPosDesc = 3 * canvas.height/8 - 46;
+
+    if( gCurrentGamePadIndices[0] !== undefined ){
+        description = getDescription( 0 );
+        if( description.length > 20 ){
+            description = description.slice( 0, 20 ) + '...';;
+        }
+    }
+
+    if( isReady4Control( 0 ) ){
+        ctx.fillStyle = 'rgba( 0, 0, 0 )';
+    }else{
+        ctx.fillStyle = 'rgba( 255, 255, 255 )';
+    }
+    ctx.font = "19px 'Noto Sans JP'";
+    ctx.textAlign = 'center'
+    
+    ctx.fillText( description, xPosDesc, yPosDesc );
+
+    ctx.restore();
+
+}
+
+const drawDescriptionDoubleControl = ( context, canvas ) => {
+
+    let description, xPosDesc, yPosDesc;
+    const ctx = context;
+    ctx.save();
+    
+    ctx.font = "22px 'Noto Sans JP'";
+    ctx.textAlign = 'center'
+    ctx.fillStyle = 'rgba(255, 255, 255)';
+
+    description = 'Double Cube Control';
+    xPosDesc = canvas.width / 2;
+    yPosDesc = canvas.height / 8 - 10;
+    ctx.fillText( description, xPosDesc, yPosDesc );
+
+
+    ctx.font = "17px 'Noto Sans JP'";
+    ctx.textAlign = 'center'
+    ctx.fillStyle = 'rgba(255, 255, 255)';
+
+    description = 'Cube P';
+    xPosDesc = canvas.width / 4;
+    yPosDesc = 3 * canvas.height / 4 - 48;
+    ctx.fillText( description, xPosDesc, yPosDesc );
+
+    xPosDesc = 3 * canvas.width / 4;
+    description = 'Cube Q';
+    ctx.fillText( description, xPosDesc, yPosDesc );
+
+
+    ctx.restore();
+
+}
+
+
 const drawStatus = ( index, context, canvas ) => {
+
+    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
+        drawStatusSingle( index, context, canvas );
+    }else{
+        drawStatusDouble( context, canvas );
+    }
+
+}
+
+const drawStatusSingle = ( index, context, canvas ) => {
     const ctx = context;
     const CUBE_SIZE = 120;
     ctx.save();
@@ -1235,7 +1438,7 @@ const drawStatus = ( index, context, canvas ) => {
 
     // Mode text
     let modeText = 'Op. Mode: ';
-    modeText += OPE_MODES_NAME_ARRAY[ gOperationModeIndexArray[ index ] ];
+    modeText += OPE_MODES_NAME_ARRAY_SINGLE[ gOperationModeIndexArray[ index ] ];
     let xPosMode = 2*canvas.width/3;
     let yPosMode = canvas.height/2 * ( index + 1 ) -100;
     ctx.fillText( modeText, xPosMode, yPosMode );
@@ -1245,6 +1448,32 @@ const drawStatus = ( index, context, canvas ) => {
     maxSpeedText += Math.round( gMaxSpeed[ index ] * 100 );
     let xPosMaxSpeed = 2*canvas.width/3;
     let yPosMaxSpeed = canvas.height/2 * ( index + 1 ) - 70;
+    ctx.fillText( maxSpeedText, xPosMaxSpeed, yPosMaxSpeed );
+
+    ctx.restore();
+
+}
+
+const drawStatusDouble = ( context, canvas ) => {
+    const ctx = context;
+    ctx.save();
+    
+    ctx.font = "16px 'Noto Sans JP'";
+    ctx.textAlign = 'left'
+    ctx.fillStyle = 'rgba(0, 0, 0)';
+
+    // Mode text
+    let modeText = 'Op. Mode: ';
+    modeText += OPE_MODES_NAME_ARRAY_DOUBLE[ gOperationModeIndexArray[ 0 ] ];
+    let xPosMode = canvas.width/3;
+    let yPosMode = 5 * canvas.height/8 - 88;
+    ctx.fillText( modeText, xPosMode, yPosMode );
+
+    // Max speed text
+    let maxSpeedText = 'Max Speed: ';
+    maxSpeedText += Math.round( gMaxSpeed[ 0 ] * 100 );
+    let xPosMaxSpeed = canvas.width/3;
+    let yPosMaxSpeed = 5 * canvas.height/8 - 58;
     ctx.fillText( maxSpeedText, xPosMaxSpeed, yPosMaxSpeed );
 
     ctx.restore();
@@ -1277,6 +1506,18 @@ const isReady4Control = ( index ) => {
     if( ( gCubes[ index ] === undefined ) 
         || ( gCubes[ index ].lightChar === undefined ) 
             || ( gCurrentGamePadIndices[ index ] === undefined ) ){
+        return false;
+    }else{
+        return true;
+    }
+
+}
+
+const isReady4ControlDouble = () => {
+
+    if( ( gCubes[ 0 ] === undefined ) || ( gCubes[ 1 ] === undefined ) 
+        || ( gCubes[ 0 ].lightChar === undefined )  || ( gCubes[ 1 ].lightChar === undefined ) 
+            || ( gCurrentGamePadIndices[ 0 ] === undefined ) ){
         return false;
     }else{
         return true;
