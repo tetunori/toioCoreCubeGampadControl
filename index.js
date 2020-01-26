@@ -84,8 +84,10 @@ const selectGamePad = ( idGamepad ) => {
         // 1st, search for vacant slot.
         if( gCGPI[0] === undefined ){
             gCGPI[0] = idGamepad;
+            gCubes[0] = connectNewCube();
         }else if( gCGPI[1] === undefined ){
             gCGPI[1] = idGamepad;
+            gCubes[1] = connectNewCube();
         }else{
             // slots are full.
             // set this to 0
@@ -546,7 +548,7 @@ const opMove = ( cubeIndex, gamePadIndex ) => {
 
     const gISItem = gInputStatus[ gamePadIndex ];
     const magnitude = gMaxSpeed[ gamePadIndex ] * 100 * 
-                        Math.pow( gISItem.xAxisLeft, 2 ) + Math.pow( gISItem.yAxisLeft, 2 );
+                        Math.sqrt( Math.pow( gISItem.xAxisLeft, 2 ) + Math.pow( gISItem.yAxisLeft, 2 ) );
     // console.log( magnitude );
 
     let angle;
@@ -869,34 +871,50 @@ const drawBackground = ( context, canvas ) => {
 
 }
 
+// -- Draw Background for Single control mode
 const drawBackgroundSingle = ( context, canvas ) => {
 
     const ctx = context;
     canvas.width = 400;
     canvas.height = 300;
     ctx.save();
+
+    // Blue region
     ctx.fillStyle = "rgba( 0, 148, 170, 1 )" ;    
     ctx.fillRect( 0, 0, canvas.width, canvas.height/2 );
+    
+    // Green region
     ctx.fillStyle = "rgba( 146, 168, 0, 1 )" ;    
     ctx.fillRect( 0, canvas.height/2, canvas.width, canvas.height/2 );
+    
     ctx.restore();
 
 }
 
+// -- Draw Background for Double control mode
 const drawBackgroundDouble = ( context, canvas ) => {
 
     const ctx = context;
     canvas.width = 400;
     canvas.height = 300;
     ctx.save();
+
+    // Upper half background grey
     ctx.fillStyle = "rgba( 192, 192, 192, 1 )" ;
     ctx.fillRect( 0, 0, canvas.width, canvas.height/2 );
+
+    // Title band
     ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
     ctx.fillRect( 0, 0, canvas.width, canvas.height/8 );
+
+    // Lower Blue region
     ctx.fillStyle = "rgba( 0, 148, 170, 1 )" ;
     ctx.fillRect( 0, canvas.height/2, canvas.width/2, canvas.height/2 );
+    
+    // Lower Green region
     ctx.fillStyle = "rgba( 146, 168, 0, 1 )" ;
     ctx.fillRect( canvas.width/2, canvas.height/2, canvas.width/2, canvas.height/2 );
+    
     ctx.restore();
 
 } 
@@ -913,22 +931,44 @@ const drawAnalogLeft = ( index, context, canvas ) => {
 }
 
 const drawAnalogLeftSingle = ( index, context, canvas ) => {
-
-    drawAnalogStateSingle( -10, 0, index, context, canvas, true );
-
+    const X_OFFSET = -10;
+    drawAnalogStateSingle( X_OFFSET, 0, index, context, canvas, true );
 }
 
 const drawAnalogLeftDouble = ( index, context, canvas ) => {
-    
     if( index === 0 ){
         drawAnalogStateDouble( 0, 0, context, canvas, true );
+    }
+}
+
+// -- Draw the state of right analog stick
+const drawAnalogRight = ( index, context, canvas ) => {
+
+    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
+        drawAnalogRightSingle( index, context, canvas );
+    }else{
+        drawAnalogRightDouble( index, context, canvas );
     }
 
 }
 
+const drawAnalogRightSingle = ( index, context, canvas ) => {
+    const X_OFFSET = canvas.width/3 - 18;
+    drawAnalogStateSingle( X_OFFSET, 0, index, context, canvas, false );
+}
+
+const drawAnalogRightDouble = ( index, context, canvas ) => {
+    const X_OFFSET = canvas.width/2;
+    if( index === 0 ){
+        drawAnalogStateDouble( X_OFFSET, 0, context, canvas, false );
+    }
+}
+
+// -- Draw analog status core function for Single
 const drawAnalogStateSingle = ( offsetX, offsetY, index, context, canvas, isLeft ) => {
 
     const SQUARE_SIZE = 100;
+    const HALF_SQUARE_SIZE = SQUARE_SIZE / 2;
     const OFFSET = 10;
 
     const ctx = context;
@@ -937,22 +977,21 @@ const drawAnalogStateSingle = ( offsetX, offsetY, index, context, canvas, isLeft
     ctx.strokeStyle = "rgba( 255, 255, 255, 0.6 )" ;
 
     // Rect for rim
-    ctx.strokeRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
-        SQUARE_SIZE, SQUARE_SIZE );
-    ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
-        SQUARE_SIZE, SQUARE_SIZE );
+    const RECT_X = canvas.width/3 - SQUARE_SIZE + offsetX;
+    const RECT_Y = canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET;
+    ctx.strokeRect( RECT_X, RECT_Y, SQUARE_SIZE, SQUARE_SIZE );
+    ctx.fillRect( RECT_X, RECT_Y, SQUARE_SIZE, SQUARE_SIZE );
     
     // Circle
     ctx.beginPath();
-    ctx.arc( canvas.width/3 - SQUARE_SIZE / 2 + offsetX, 
-        canvas.height/2 * ( index + 1 ) - SQUARE_SIZE / 2 - OFFSET,
-        SQUARE_SIZE / 2, 0, Math.PI * 2 );
+    ctx.arc( RECT_X + HALF_SQUARE_SIZE, RECT_Y + HALF_SQUARE_SIZE, 
+                                        HALF_SQUARE_SIZE, 0, Math.PI * 2 );
     
     // Center lines
-    ctx.moveTo( canvas.width/3 - SQUARE_SIZE / 2 + offsetX, canvas.height/2 * ( index + 1 )- SQUARE_SIZE - OFFSET );
-    ctx.lineTo( canvas.width/3 - SQUARE_SIZE / 2 + offsetX, canvas.height/2 * ( index + 1 ) - OFFSET );
-    ctx.moveTo( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET );
-    ctx.lineTo( canvas.width/3 + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET );
+    ctx.moveTo( RECT_X + HALF_SQUARE_SIZE, RECT_Y );
+    ctx.lineTo( RECT_X + HALF_SQUARE_SIZE, RECT_Y + SQUARE_SIZE );
+    ctx.moveTo( RECT_X,                    RECT_Y + HALF_SQUARE_SIZE );
+    ctx.lineTo( RECT_X + SQUARE_SIZE,      RECT_Y + HALF_SQUARE_SIZE );
     ctx.stroke();
 
     // Pointer
@@ -983,8 +1022,8 @@ const drawAnalogStateSingle = ( offsetX, offsetY, index, context, canvas, isLeft
         }
     }
 
-    ctx.arc( canvas.width/3 - SQUARE_SIZE / 2  + offsetX + xAxis * SQUARE_SIZE / 2, 
-                canvas.height/2 * ( index + 1 ) - SQUARE_SIZE/2 - OFFSET - yAxis * SQUARE_SIZE / 2, 
+    ctx.arc( RECT_X + HALF_SQUARE_SIZE + xAxis * HALF_SQUARE_SIZE, 
+                RECT_Y + HALF_SQUARE_SIZE - yAxis * HALF_SQUARE_SIZE, 
                     RADIUS, 0, 2 * Math.PI, false );
     
     ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )";
@@ -993,29 +1032,29 @@ const drawAnalogStateSingle = ( offsetX, offsetY, index, context, canvas, isLeft
 
     // Gray out
     if( gOperationModeIndexArray[ index ] === 1 ){
+
+        // Single Stick control mode.
+        ctx.fillStyle = "rgba( 0, 0, 0, 0.3 )" ;
+        
         if( isLeft ){        
-            ctx.fillStyle = "rgba( 0, 0, 0, 0.3 )" ;
-            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
-                SQUARE_SIZE * 2 / 5, SQUARE_SIZE );
-            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX + SQUARE_SIZE * 3 / 5, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
-                SQUARE_SIZE * 2 / 5, SQUARE_SIZE );
+            ctx.fillRect( RECT_X, RECT_Y, SQUARE_SIZE * 2 / 5, SQUARE_SIZE );
+            ctx.fillRect( RECT_X + SQUARE_SIZE * 3 / 5, RECT_Y, SQUARE_SIZE * 2 / 5, SQUARE_SIZE );
         }else{
-            ctx.fillStyle = "rgba( 0, 0, 0, 0.3 )" ;
-            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET, 
-                SQUARE_SIZE, SQUARE_SIZE * 2 / 5 );
-            ctx.fillRect( canvas.width/3 - SQUARE_SIZE + offsetX, canvas.height/2 * ( index + 1 ) - SQUARE_SIZE - OFFSET + SQUARE_SIZE * 3 / 5, 
-                SQUARE_SIZE, SQUARE_SIZE * 2 / 5 );
+            ctx.fillRect( RECT_X, RECT_Y, SQUARE_SIZE, SQUARE_SIZE * 2 / 5 );
+            ctx.fillRect( RECT_X, RECT_Y + SQUARE_SIZE * 3 / 5, SQUARE_SIZE, SQUARE_SIZE * 2 / 5 );
         }
+        
     }
     
-
     ctx.restore();
 
 }
 
+// -- Draw analog status core function for Double
 const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
 
     const SQUARE_SIZE = 100;
+    const HALF_SQUARE_SIZE = SQUARE_SIZE / 2;
     const OFFSET = 10;
 
     const ctx = context;
@@ -1024,22 +1063,21 @@ const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
     ctx.strokeStyle = "rgba( 255, 255, 255, 0.6 )" ;
 
     // Rect for rim
-    ctx.strokeRect( canvas.width/8 + offsetX, canvas.height/2 * 2 - SQUARE_SIZE - OFFSET, 
-        SQUARE_SIZE, SQUARE_SIZE );
-    ctx.fillRect( canvas.width/8 + offsetX, canvas.height/2 * 2 - SQUARE_SIZE - OFFSET, 
-        SQUARE_SIZE, SQUARE_SIZE );
+    const RECT_X = canvas.width/8 + offsetX;
+    const RECT_Y = canvas.height/2 * 2 - SQUARE_SIZE - OFFSET;
+    ctx.strokeRect( RECT_X, RECT_Y, SQUARE_SIZE, SQUARE_SIZE );
+    ctx.fillRect( RECT_X, RECT_Y, SQUARE_SIZE, SQUARE_SIZE );
     
     // Circle
     ctx.beginPath();
-    ctx.arc( canvas.width/8 + offsetX + SQUARE_SIZE / 2, 
-        canvas.height/2 * 2 - SQUARE_SIZE / 2 - OFFSET,
-        SQUARE_SIZE / 2, 0, Math.PI * 2 );
+    ctx.arc( RECT_X + HALF_SQUARE_SIZE, RECT_Y + HALF_SQUARE_SIZE,
+                HALF_SQUARE_SIZE, 0, Math.PI * 2 );
     
     // Center lines
-    ctx.moveTo( canvas.width/4 + offsetX, canvas.height/2 * 2- SQUARE_SIZE - OFFSET );
-    ctx.lineTo( canvas.width/4 + offsetX, canvas.height/2 * 2 - OFFSET );
-    ctx.moveTo( canvas.width/8 + offsetX, canvas.height/2 * 2 - SQUARE_SIZE/2 - OFFSET );
-    ctx.lineTo( canvas.width/8 + SQUARE_SIZE + offsetX, canvas.height/2 * 2 - SQUARE_SIZE/2 - OFFSET );
+    ctx.moveTo( RECT_X + HALF_SQUARE_SIZE, RECT_Y );
+    ctx.lineTo( RECT_X + HALF_SQUARE_SIZE, RECT_Y + SQUARE_SIZE );
+    ctx.moveTo( RECT_X,                    RECT_Y + HALF_SQUARE_SIZE );
+    ctx.lineTo( RECT_X + SQUARE_SIZE,      RECT_Y + HALF_SQUARE_SIZE );
     ctx.stroke();
 
     // Pointer
@@ -1066,6 +1104,7 @@ const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
     }
 
     if( gOperationModeIndexArray[ 0 ] === 1 ){
+        // Double Separated control mode
         if( isLeft ){
             [ xAxis, yAxis ] = [ -1 * yAxis, xAxis ];
         }else{
@@ -1073,10 +1112,10 @@ const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
         }
     }
 
-    ctx.arc( canvas.width/8 + SQUARE_SIZE / 2 + offsetX + xAxis * SQUARE_SIZE / 2, 
-                canvas.height/2 * 2 - SQUARE_SIZE/2 - OFFSET - yAxis * SQUARE_SIZE / 2, 
-                    RADIUS, 0, 2 * Math.PI, false );
-    
+    ctx.arc( RECT_X + HALF_SQUARE_SIZE + xAxis * HALF_SQUARE_SIZE, 
+            RECT_Y + HALF_SQUARE_SIZE - yAxis * HALF_SQUARE_SIZE, 
+                RADIUS, 0, 2 * Math.PI, false );
+
     ctx.fillStyle = "rgba( 255, 255, 255, 1.0 )";
     ctx.fill();
     ctx.closePath();
@@ -1084,32 +1123,6 @@ const drawAnalogStateDouble = ( offsetX, offsetY, context, canvas, isLeft ) => {
     ctx.restore();
 
 }
-
-// -- Draw the state of right analog stick. ONLY for x-axis
-const drawAnalogRight = ( index, context, canvas ) => {
-
-    if( gCubeControlMode === CUBE_CONTROL_MODE_SINGLE ){
-        drawAnalogRightSingle( index, context, canvas );
-    }else{
-        drawAnalogRightDouble( index, context, canvas );
-    }
-
-}
-
-const drawAnalogRightSingle = ( index, context, canvas ) => {
-
-    drawAnalogStateSingle( canvas.width/3 - 18, 0, index, context, canvas, false );
-
-}
-
-const drawAnalogRightDouble = ( index, context, canvas ) => {
-
-    if( index === 0 ){
-        drawAnalogStateDouble( canvas.width/2, 0, context, canvas, false );
-    }
-
-}
-
 
 // -- Draw connection status panel
 const cubeImage = new Image();
@@ -1139,6 +1152,7 @@ const drawConnectionStateSingle = ( index, context, canvas ) => {
     if( !isReady4Control( index ) ){
         // Not Ready yet. so this panel is needed.
 
+        // Back ground
         ctx.fillStyle = "rgba( 0, 0, 0, 1 )" ;
         ctx.fillRect( 0, index * canvas.height / 2, canvas.width, canvas.height / 2 );
         
@@ -1156,7 +1170,8 @@ const drawConnectionStateSingle = ( index, context, canvas ) => {
             image = cubeImage;
             ctx.globalAlpha = 0.3;
         }
-        ctx.drawImage( image, canvas.width/3 - CUBE_SIZE/2, ( 2 * index + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
+        const IMAGE_Y = ( 2 * index + 1 ) * canvas.height/4 - CUBE_SIZE/2;
+        ctx.drawImage( image, canvas.width/3 - CUBE_SIZE/2, IMAGE_Y, CUBE_SIZE, CUBE_SIZE );
 
         // For game pad status
         if( gCurrentGamePadIndices[index] !== undefined ){
@@ -1164,7 +1179,7 @@ const drawConnectionStateSingle = ( index, context, canvas ) => {
         }else{
             ctx.globalAlpha = 0.3;
         }
-        ctx.drawImage( controllerImage, canvas.width/3 + CUBE_SIZE/2, ( 2 * index + 1 ) * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
+        ctx.drawImage( controllerImage, canvas.width/3 + CUBE_SIZE/2, IMAGE_Y, CUBE_SIZE, CUBE_SIZE );
 
     }
     ctx.restore();
@@ -1199,7 +1214,8 @@ const drawConnectionStateDouble = ( context, canvas ) => {
                 ctx.globalAlpha = 0.3;
                 image = cubeImage;
             }
-            ctx.drawImage( image, ( 2 * index + 1 ) * canvas.width/4 - CUBE_SIZE/2, 3 * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
+            ctx.drawImage( image, ( 2 * index + 1 ) * canvas.width/4 - CUBE_SIZE/2, 
+                                    3 * canvas.height/4 - CUBE_SIZE/2, CUBE_SIZE, CUBE_SIZE );
 
         }
 
@@ -1209,7 +1225,8 @@ const drawConnectionStateDouble = ( context, canvas ) => {
         }else{
             ctx.globalAlpha = 0.3;
         }
-        ctx.drawImage( controllerImage, canvas.width/2 - CUBE_SIZE/2, canvas.height/8 + 20, CUBE_SIZE, CUBE_SIZE );
+        ctx.drawImage( controllerImage, canvas.width/2 - CUBE_SIZE/2, canvas.height/8 + 20, 
+                            CUBE_SIZE, CUBE_SIZE );
 
     }
     ctx.restore();
@@ -1223,13 +1240,14 @@ const drawDescription = ( index, context, canvas ) => {
     }else{
         drawDescriptionControllerDouble( context, canvas );
         if( isReady4ControlDouble() ){
-            drawDescriptionDoubleControl( context, canvas );
+            drawDescriptionDoubleMode( context, canvas );
         }
     }
 
 }
 
 const drawDescriptionControllerSingle = ( index, context, canvas ) => {
+
     const ctx = context;
     const CUBE_SIZE = 120;
     ctx.save();
@@ -1259,8 +1277,8 @@ const drawDescriptionControllerSingle = ( index, context, canvas ) => {
 }
 
 const drawDescriptionControllerDouble = ( context, canvas ) => {
+
     const ctx = context;
-    const CUBE_SIZE = 120;
     ctx.save();
     
     // Game pad's description
@@ -1282,14 +1300,13 @@ const drawDescriptionControllerDouble = ( context, canvas ) => {
     }
     ctx.font = "19px 'Noto Sans JP'";
     ctx.textAlign = 'center'
-    
     ctx.fillText( description, xPosDesc, yPosDesc );
 
     ctx.restore();
 
 }
 
-const drawDescriptionDoubleControl = ( context, canvas ) => {
+const drawDescriptionDoubleMode = ( context, canvas ) => {
 
     let description, xPosDesc, yPosDesc;
     const ctx = context;
@@ -1304,25 +1321,20 @@ const drawDescriptionDoubleControl = ( context, canvas ) => {
     yPosDesc = canvas.height / 8 - 10;
     ctx.fillText( description, xPosDesc, yPosDesc );
 
-
     ctx.font = "17px 'Noto Sans JP'";
-    ctx.textAlign = 'center'
-    ctx.fillStyle = 'rgba(255, 255, 255)';
+    yPosDesc = 3 * canvas.height / 4 - 48;
 
     description = 'Cube P';
     xPosDesc = canvas.width / 4;
-    yPosDesc = 3 * canvas.height / 4 - 48;
     ctx.fillText( description, xPosDesc, yPosDesc );
 
-    xPosDesc = 3 * canvas.width / 4;
     description = 'Cube Q';
+    xPosDesc = 3 * canvas.width / 4;
     ctx.fillText( description, xPosDesc, yPosDesc );
-
 
     ctx.restore();
 
 }
-
 
 const drawStatus = ( index, context, canvas ) => {
 
@@ -1335,8 +1347,11 @@ const drawStatus = ( index, context, canvas ) => {
 }
 
 const drawStatusSingle = ( index, context, canvas ) => {
+
     const ctx = context;
-    const CUBE_SIZE = 120;
+    const XPOS_BASE = 2 * canvas.width / 3;
+    const YPOS_BASE = canvas.height / 2 * ( index + 1 );
+
     ctx.save();
     
     ctx.font = "14px 'Noto Sans JP'";
@@ -1346,15 +1361,15 @@ const drawStatusSingle = ( index, context, canvas ) => {
     // Mode text
     let modeText = 'Op. Mode: ';
     modeText += OPE_MODES_NAME_ARRAY_SINGLE[ gOperationModeIndexArray[ index ] ];
-    let xPosMode = 2*canvas.width/3;
-    let yPosMode = canvas.height/2 * ( index + 1 ) -100;
+    let xPosMode = XPOS_BASE;
+    let yPosMode = YPOS_BASE - 100;
     ctx.fillText( modeText, xPosMode, yPosMode );
 
     // Max speed text
     let maxSpeedText = 'Max Speed: ';
     maxSpeedText += Math.round( gMaxSpeed[ index ] * 100 );
-    let xPosMaxSpeed = 2*canvas.width/3;
-    let yPosMaxSpeed = canvas.height/2 * ( index + 1 ) - 70;
+    let xPosMaxSpeed = XPOS_BASE;
+    let yPosMaxSpeed = YPOS_BASE - 70;
     ctx.fillText( maxSpeedText, xPosMaxSpeed, yPosMaxSpeed );
 
     ctx.restore();
@@ -1362,7 +1377,11 @@ const drawStatusSingle = ( index, context, canvas ) => {
 }
 
 const drawStatusDouble = ( context, canvas ) => {
+
     const ctx = context;
+    const XPOS_BASE = canvas.width / 3;
+    const YPOS_BASE = 5 * canvas.height/8;
+
     ctx.save();
     
     ctx.font = "16px 'Noto Sans JP'";
@@ -1372,15 +1391,15 @@ const drawStatusDouble = ( context, canvas ) => {
     // Mode text
     let modeText = 'Op. Mode: ';
     modeText += OPE_MODES_NAME_ARRAY_DOUBLE[ gOperationModeIndexArray[ 0 ] ];
-    let xPosMode = canvas.width/3;
-    let yPosMode = 5 * canvas.height/8 - 88;
+    let xPosMode = XPOS_BASE;
+    let yPosMode = YPOS_BASE - 88;
     ctx.fillText( modeText, xPosMode, yPosMode );
 
     // Max speed text
     let maxSpeedText = 'Max Speed: ';
     maxSpeedText += Math.round( gMaxSpeed[ 0 ] * 100 );
-    let xPosMaxSpeed = canvas.width/3;
-    let yPosMaxSpeed = 5 * canvas.height/8 - 58;
+    let xPosMaxSpeed = XPOS_BASE;
+    let yPosMaxSpeed = YPOS_BASE - 58;
     ctx.fillText( maxSpeedText, xPosMaxSpeed, yPosMaxSpeed );
 
     ctx.restore();
@@ -1516,9 +1535,7 @@ const initialize = () => {
         window.open('https://github.com/tetunori/MechanumWheelControlWebBluetooth/blob/master/README.md','_blank');
     });
 
-    setMaxSpeed( 0, DEFAULT_SPEED );
-    setMaxSpeed( 1, DEFAULT_SPEED );
-
+    resetAll();
     updateStatus();
 
 }
