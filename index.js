@@ -84,10 +84,14 @@ const selectGamePad = ( idGamepad ) => {
         // 1st, search for vacant slot.
         if( gCGPI[0] === undefined ){
             gCGPI[0] = idGamepad;
-            gCubes[0] = connectNewCube();
+            if( document.getElementById( "btConnectCube1" ).disabled === false ){
+                gCubes[0] = connectNewCube();
+            }
         }else if( gCGPI[1] === undefined ){
             gCGPI[1] = idGamepad;
-            gCubes[1] = connectNewCube();
+            if( document.getElementById( "btConnectCube2" ).disabled === false ){
+                gCubes[1] = connectNewCube();
+            }
         }else{
             // slots are full.
             // set this to 0
