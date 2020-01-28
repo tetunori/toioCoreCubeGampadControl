@@ -1536,7 +1536,7 @@ const initialize = () => {
     }
 
     document.getElementById( "btShowOperation" ).addEventListener( "click", async ev => {
-        window.open('https://github.com/tetunori/MechanumWheelControlWebBluetooth/blob/master/README.md','_blank');
+        window.open('https://github.com/tetunori/toioCoreCubeGampadControl/blob/master/README.md','_blank');
     });
 
     resetAll();

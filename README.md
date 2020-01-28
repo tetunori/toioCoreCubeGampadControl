@@ -27,7 +27,7 @@ We have some modes to control cubes. Please see the chart below.
 <BR><img src="./images/mode_description.png" width="800px">
 - Single Cube Control
   - Normal mode
-    - <img src="./images/IMG_0716.JPG" width="250px">
+    - <img src="./images/IMG_0716.JPG" width="400px">
     - Left analog stick: Move
     - Right analog stick(X-Axis): Rotation
   - Stick mode
@@ -35,11 +35,11 @@ We have some modes to control cubes. Please see the chart below.
     - Right analog stick(X-Axis): Direction
 - Double Cube Control
   - Combined mode
-    - <img src="./images/IMG_0719.JPG" width="250px">
+    - <img src="./images/IMG_0719.JPG" width="400px">
     - Left analog stick: Cube1 Move
     - Right analog stick: Cube2 Move
   - Separated mode
-    - Mainly, for Joy-Con L/R<BR><img src="./images/IMG_0718.JPG" width="250px">
+    - Mainly, for Joy-Con L/R<BR><img src="./images/IMG_0718.JPG" width="400px">
     - Left analog stick(rotate 90 deg.): Cube1 Move
     - Right analog stick(rotate -90 deg.): Cube2 Move
 
