@@ -7,6 +7,9 @@ A Simple tool enables us to control toio™Core Cubes by a gamepad such as DUALS
 See [this article(Under Construction)](https://qiita.com/tetunori_lego/items/37477c40b16f8eab384f) in detail. You can try [here](https://tetunori.github.io/toioCoreCubeGampadControl/).  
 Now, WebBluetooth works on the limited browser/OS. Please check the support status on [Can I Use](https://caniuse.com/#feat=web-bluetooth).
 
+# Topology
+<img src="./images/topology.png" width="800px">
+
 # Usage
 ## Preparation
 ### Hardware
@@ -22,9 +25,9 @@ Now, WebBluetooth works on the limited browser/OS. Please check the support stat
 ## Mode Description
 We have some modes to control cubes. Please see the chart below.
 <BR><img src="./images/mode_description.png" width="800px">
-
 - Single Cube Control
   - Normal mode
+    - <img src="./images/IMG_0716.JPG" width="250px">
     - Left analog stick: Move
     - Right analog stick(X-Axis): Rotation
   - Stick mode
@@ -32,11 +35,11 @@ We have some modes to control cubes. Please see the chart below.
     - Right analog stick(X-Axis): Direction
 - Double Cube Control
   - Combined mode
-    - <img src="./images/110.png" width="250px">
+    - <img src="./images/IMG_0719.JPG" width="250px">
     - Left analog stick: Cube1 Move
     - Right analog stick: Cube2 Move
   - Separated mode
-    - Mainly, for Joy-Con L/R<BR><img src="./images/110.png" width="250px">
+    - Mainly, for Joy-Con L/R<BR><img src="./images/IMG_0718.JPG" width="250px">
     - Left analog stick(rotate 90 deg.): Cube1 Move
     - Right analog stick(rotate -90 deg.): Cube2 Move
 
@@ -54,7 +57,7 @@ We have some modes to control cubes. Please see the chart below.
 |---|---|---|
 |Exchange Cube1/2|OPTION/+ button|Light Cube1 in blue, Cube2 in green.|
 |Reset setting|PS/HOME button| - |
-|Adjust speed|L1/R1, L/R button|<img src="./images/204.png" width="200px"><BR>Default value is 60.|
+|Adjust speed|L1/R1, L/R button|Default value is 60.|
 
 ### Single Cube Control
 #### Common
@@ -68,7 +71,7 @@ We have some modes to control cubes. Please see the chart below.
 #### Normal mode
 |Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
 |---|---|---|
-|Analog move|Left analog stick|<img src="./images/200.png" width="300px">|
+|Analog move|Left analog stick|<img src="./images/IMG_0716.JPG" width="300px">|
 |Go forward/backward|UP/DOWN button|top speed|
 |Turn|X-axis of right analog stick or LEFT/RIGHT button|Also CIRCLE/A, SQUARE/Y button used as top speed turn|
 Working demo movie(will update...)
@@ -90,10 +93,10 @@ Working demo movie(will update...)
 #### Combined mode
 |Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
 |---|---|---|
-|Cube1 Analog move|Left analog stick|<img src="./images/200.png" width="300px">|
+|Cube1 Analog move|Left analog stick|<img src="./images/IMG_0719.JPG" width="300px">|
 |Cube1 forward/backward|UP/DOWN button|top speed|
 |Cube1 Turn|LEFT/RIGHT button|top speed turn|
-|Cube2 Analog move|Right analog stick|<img src="./images/200.png" width="300px">|
+|Cube2 Analog move|Right analog stick|See the image above.|
 |Cube2 forward/backward|TRIANGLE/CROSS button|top speed|
 |Cube2 Turn|SQUARE/CIRCLE button|top speed turn|
 Working demo movie(will update...)
@@ -101,10 +104,10 @@ Working demo movie(will update...)
 #### Separated mode
 |Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
 |---|---|---|
-|Cube1 Analog move|Left analog stick<BR>(rotate 90 deg.)|<img src="./images/200.png" width="300px">|
+|Cube1 Analog move|Left analog stick<BR>(rotate 90 deg.)|<img src="./images/IMG_0723.JPG" width="300px">|
 |Cube1 forward/backward|LEFT/RIGHT button|top speed|
 |Cube1 Turn|UP/DOWN button|top speed turn|
-|Cube2 Analog move|Right analog stick<BR>(rotate -90 deg.)|<img src="./images/200.png" width="300px">|
+|Cube2 Analog move|Right analog stick<BR>(rotate -90 deg.)|<img src="./images/IMG_0722.JPG" width="300px">|
 |Cube2 forward/backward|SQUARE/CIRCLE button|top speed|
 |Cube2 Turn|TRIANGLE/CROSS button|top speed turn|
 Working demo movie(will update...)
