@@ -46,10 +46,10 @@ We have some modes to control cubes. Please see the chart below.
 ## Screen Description
 
 ### Single Cube Control
-<img src="./images/screen_description_single.png" width="800px">
+<img src="./images/301.png" width="800px">
 
 ### Double Cube Control
-<img src="./images/screen_description_double.png" width="800px">
+<img src="./images/302.png" width="800px">
 
 ## Operation
 ### Common
