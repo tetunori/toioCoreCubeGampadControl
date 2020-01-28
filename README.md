@@ -17,11 +17,28 @@ Now, WebBluetooth works on the limited browser/OS. Please check the support stat
 1. Open [this tool](https://tetunori.github.io/toioCoreCubeGampadControl/). Google Chrome is highly recommended.
 2. Push the PS/Home button on the gamepad. You will see the gamepad icon active in the canvas.<BR><img src="./images/105.png" width="250px">
 3. Automatically, the dialog for Bluetooth connection will open. Or by pressing "Connect Cube 1/2" button, you can open the dialog manually. Then, you can select and connect Cubes one by one.
-4. If the tool is ready, the canvas shows the images below.<BR><img src="./images/110.png" width="250px">
+4. If the tool is ready, the canvas will show the image like below.<BR><img src="./images/110.png" width="250px">
 
 ## Mode Description
 We have some modes to control cubes. Please see the chart below.
-<img src="./images/mode_description.png" width="800px">
+<BR><img src="./images/mode_description.png" width="800px">
+
+- Single Cube Control
+  - Normal mode
+    - Left analog stick: Move
+    - Right analog stick(X-Axis): Rotation
+  - Stick mode
+    - Left analog stick(Y-Axis): Speed
+    - Right analog stick(X-Axis): Direction
+- Double Cube Control
+  - Combined mode
+    - <img src="./images/110.png" width="250px">
+    - Left analog stick: Cube1 Move
+    - Right analog stick: Cube2 Move
+  - Separated mode
+    - Mainly, for Joy-Con L/R<BR><img src="./images/110.png" width="250px">
+    - Left analog stick(rotate 90 deg.): Cube1 Move
+    - Right analog stick(rotate -90 deg.): Cube2 Move
 
 ## Screen Description
 
@@ -32,25 +49,65 @@ We have some modes to control cubes. Please see the chart below.
 <img src="./images/screen_description_double.png" width="800px">
 
 ## Operation
+### Common
+|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|---|---|---|
+|Exchange Cube1/2|OPTION/+ button|Light Cube1 in blue, Cube2 in green.|
+|Reset setting|PS/HOME button| - |
+|Adjust speed|L1/R1, L/R button|<img src="./images/204.png" width="200px"><BR>Default value is 60.|
+
 ### Single Cube Control
-|Category|Key Op.|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
-|---|---|---|---|
-|Omni-direction move|8 directions by ↑/↓/←/→|Left analog stick<BR>(with ✕/B button, limit to 8 directions. Frame color: Red.)|<img src="./images/200.png" width="300px">
-|Turn around<BR>center<BR>(red point)|r + ←/→|Right analog stick|<img src="./images/201.png" width="300px">|
-|Turn around<BR>Head/tail<BR>(red point)|h/t + ←/→|↑/↓ + right analog stick|<img src="./images/202.png" width="300px">|
-|Turn around<BR>l/r wheel<BR>(red point) |d/f + ←/→|←/→ + right analog stick|<img src="./images/203.png" width="300px">|
-|Exchange Head/Tail|Q key|Option/+ button|Light Head Cube in white.|
-|Reset setting|ESC key|PS/Home button||
-|Select gamepad|N/A|PS/Home button||
-|Adjust speed discretely|-/+ key|L1/R1, L/R button|<img src="./images/204.png" width="200px"><BR>Default value is 60.|
-|Adjust speed continuously|N/A|〇 button + L2 trigger button.<BR>(Joy-Con does not support this function.)|<img src="./images/205.png" width="200px"><BR>You can operate slider directly. |
-#### Working demo movie
-(will update...)
+#### Common
+|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|---|---|---|
+|Register gamepad|PS/Home button|If not registered|
+|Switch gamepad1/2|PS/Home button|If registered|
+|Switch op. mode|SHARE/- button|Toggle Normal<->Stick|
+|Transit to Double Cube Control|Long-press PS/Home button| - |
+
+#### Normal mode
+|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|---|---|---|
+|Analog move|Left analog stick|<img src="./images/200.png" width="300px">|
+|Go forward/backward|UP/DOWN button|top speed|
+|Turn|X-axis of right analog stick or LEFT/RIGHT button|Also CIRCLE/A, SQUARE/Y button used as top speed turn|
+Working demo movie(will update...)
+
+#### Stick mode
+|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|---|---|---|
+|Speed control|Y-axis of left analog stick or left/right trigger|Also UP/DOWN button used as top speed|
+|Direction control|X-axis of right analog stick|Also CIRCLE/A, SQUARE/Y button used as max value|
+Working demo movie(will update...)
 
 ### Double Cube Control
-Chart...
-#### Working demo movie
-(will update...)
+#### Common
+|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|---|---|---|
+|Switch op. mode|SHARE/- button|Toggle Combined<->Separated|
+|Transit to Single Cube Control|PS/Home button| - |
+
+#### Combined mode
+|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|---|---|---|
+|Cube1 Analog move|Left analog stick|<img src="./images/200.png" width="300px">|
+|Cube1 forward/backward|UP/DOWN button|top speed|
+|Cube1 Turn|LEFT/RIGHT button|top speed turn|
+|Cube2 Analog move|Right analog stick|<img src="./images/200.png" width="300px">|
+|Cube2 forward/backward|TRIANGLE/CROSS button|top speed|
+|Cube2 Turn|SQUARE/CIRCLE button|top speed turn|
+Working demo movie(will update...)
+
+#### Separated mode
+|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|---|---|---|
+|Cube1 Analog move|Left analog stick<BR>(rotate 90 deg.)|<img src="./images/200.png" width="300px">|
+|Cube1 forward/backward|LEFT/RIGHT button|top speed|
+|Cube1 Turn|UP/DOWN button|top speed turn|
+|Cube2 Analog move|Right analog stick<BR>(rotate -90 deg.)|<img src="./images/200.png" width="300px">|
+|Cube2 forward/backward|SQUARE/CIRCLE button|top speed|
+|Cube2 Turn|TRIANGLE/CROSS button|top speed turn|
+Working demo movie(will update...)
 
 # Licence
 This software is released under the MIT License, see LICENSE.
