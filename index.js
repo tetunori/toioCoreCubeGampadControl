@@ -46,15 +46,23 @@ let gPreviousHomeButtonStatus = [ undefined, undefined ];
 const handleHomeButton = () => {
 
     const GAMEPAD_BT_HOME = 16;
+    const GAMEPAD_BT_8    = 8;
+    const GAMEPAD_BT_9    = 9;
 
     for( let item of gGamePadIndexArray ){
         const gamePad = navigator.getGamepads()[ item ];
         if( gamePad !== undefined ){
-            const currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
+            let currentHomeButtonStatus;
+            if( gamePad.buttons[ GAMEPAD_BT_HOME ] ){
+                currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
+            }else{
+                currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_8 ].value && 
+                                            gamePad.buttons[ GAMEPAD_BT_9 ].value;
+            }
             if( currentHomeButtonStatus !== gPreviousHomeButtonStatus[ item ] ){
                 if( ( currentHomeButtonStatus === 1 ) && 
                     ( ( gPreviousHomeButtonStatus[ item ] === 0 ) || 
-                      ( gPreviousHomeButtonStatus[ item ] === undefined ) ) ){
+                    ( gPreviousHomeButtonStatus[ item ] === undefined ) ) ){
                     // Home button pressed.
                     selectGamePad( item );
                 }
@@ -64,7 +72,7 @@ const handleHomeButton = () => {
 
             // Cube control mode
             transitToDoubleCubeControlMode( item );
-            
+
         }
     }
     
@@ -113,7 +121,16 @@ const transitToDoubleCubeControlMode = ( idGamepad ) => {
 
     const gamePad = navigator.getGamepads()[ idGamepad ];
     const GAMEPAD_BT_HOME = 16;
-    const currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
+    const GAMEPAD_BT_8 = 8;
+    const GAMEPAD_BT_9 = 9;
+    let currentHomeButtonStatus;
+    if( gamePad.buttons[ GAMEPAD_BT_HOME ] ){
+        currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
+    }else{
+        currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_8 ].value && 
+                                    gamePad.buttons[ GAMEPAD_BT_9 ].value;
+    }
+
     const gCCMST = gCubeControlModeStartTime;
 
     if( currentHomeButtonStatus === 1 ){
@@ -260,9 +277,9 @@ const registerInput = () => {
                 // Single && Stick control 
                 gISItem.xAxisLeft = gISItem.xAxisRight;
             }else{
-                if( gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
+                if( gamePad.buttons[ GAMEPAD_BT_LEFT ] && gamePad.buttons[ GAMEPAD_BT_LEFT ].value ){
                     gISItem.xAxisLeft = -1;
-                }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
+                }else if( gamePad.buttons[ GAMEPAD_BT_RIGHT ] && gamePad.buttons[ GAMEPAD_BT_RIGHT ].value ){
                     gISItem.xAxisLeft = 1;
                 }else{
                     gISItem.xAxisLeft = gamePad.axes[ GAMEPAD_LEFT_AXIS_X ];
@@ -270,9 +287,9 @@ const registerInput = () => {
             }
 
             // Y Axis of Left Analog Stick.
-            if( gamePad.buttons[ GAMEPAD_BT_UP ].value ){
+            if( gamePad.buttons[ GAMEPAD_BT_UP ] && gamePad.buttons[ GAMEPAD_BT_UP ].value ){
                 gISItem.yAxisLeft = 1;
-            }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
+            }else if( gamePad.buttons[ GAMEPAD_BT_DOWN ] && gamePad.buttons[ GAMEPAD_BT_DOWN ].value ){
                 gISItem.yAxisLeft = -1;
             }else{
                 gISItem.yAxisLeft = -1 * gamePad.axes[ GAMEPAD_LEFT_AXIS_Y ];
@@ -331,7 +348,12 @@ const registerInput = () => {
             gISItem.switchOperationMode = gamePad.buttons[ GAMEPAD_BT_8 ].value; 
 
             // Reset button
-            gISItem.reset = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
+            if( gamePad.buttons[ GAMEPAD_BT_HOME ] ){
+                gISItem.reset = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
+            }else{
+                gISItem.reset = gamePad.buttons[ GAMEPAD_BT_8 ].value && 
+                                            gamePad.buttons[ GAMEPAD_BT_9 ].value;
+            }
 
             // Speed Plus/Minus setting
             gISItem.minusMaxSpeed = gamePad.buttons[ GAMEPAD_BT_L1 ].value;
