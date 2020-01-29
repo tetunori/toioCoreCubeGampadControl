@@ -485,6 +485,7 @@ const executeDoubleCubeCommand = () => {
             // Use input status 1 tentatively for controlling 
             gISItem_1.xAxisLeft = gISItem_0.xAxisRight;
             gISItem_1.yAxisLeft = gISItem_0.yAxisRight;
+            setMaxSpeed( 1, getMaxSpeed( 0 ) );
             if( gOperationModeIndexArray[ 0 ] === 0 ){
                 // Double combined control
                 opMove( 1, 1 );
@@ -686,6 +687,10 @@ const opNoCommand = () => {
 
 
 // Sub-Functions
+const getMaxSpeed = ( index ) => {
+    return gMaxSpeed[ index ];
+}
+
 const setMaxSpeed = ( index, speed ) => {
     gMaxSpeed[ index ] = speed;
 }
