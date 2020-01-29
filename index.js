@@ -485,6 +485,7 @@ const executeDoubleCubeCommand = () => {
             // Use input status 1 tentatively for controlling 
             gISItem_1.xAxisLeft = gISItem_0.xAxisRight;
             gISItem_1.yAxisLeft = gISItem_0.yAxisRight;
+            setMaxSpeed( 1, getMaxSpeed( 0 ) );
             if( gOperationModeIndexArray[ 0 ] === 0 ){
                 // Double combined control
                 opMove( 1, 1 );
@@ -686,6 +687,10 @@ const opNoCommand = () => {
 
 
 // Sub-Functions
+const getMaxSpeed = ( index ) => {
+    return gMaxSpeed[ index ];
+}
+
 const setMaxSpeed = ( index, speed ) => {
     gMaxSpeed[ index ] = speed;
 }
@@ -1435,7 +1440,7 @@ const drawStatusDouble = ( context, canvas ) => {
 const getDescription = ( index ) => {
 
     let description;
-    let gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
+    const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
     if( gamepad ){
 
         if( isJoyCon( index ) ){
@@ -1479,10 +1484,10 @@ const isReady4ControlDouble = () => {
 
 const isDualShock4_1stGen = ( gamepadIdx ) => {
 
-    let gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
+    const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
     if( gamepad ){
 
-        let gamepadDesc = gamepad.id;
+        const gamepadDesc = gamepad.id;
         if( gamepadDesc.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 05c4)') !== -1 ){
             return true;
         }else{
@@ -1497,10 +1502,10 @@ const isDualShock4_1stGen = ( gamepadIdx ) => {
 
 const isDualShock4_2ndGen = ( gamepadIdx ) => {
 
-    let gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
+    const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
     if( gamepad ){
 
-        let gamepadDesc = gamepad.id;
+        const gamepadDesc = gamepad.id;
         if( gamepadDesc.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 09cc)') !== -1 ){
             return true;
         }else{
