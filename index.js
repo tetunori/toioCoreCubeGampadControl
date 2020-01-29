@@ -1435,7 +1435,7 @@ const drawStatusDouble = ( context, canvas ) => {
 const getDescription = ( index ) => {
 
     let description;
-    let gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
+    const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ index ] ];
     if( gamepad ){
 
         if( isJoyCon( index ) ){
@@ -1479,10 +1479,10 @@ const isReady4ControlDouble = () => {
 
 const isDualShock4_1stGen = ( gamepadIdx ) => {
 
-    let gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
+    const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
     if( gamepad ){
 
-        let gamepadDesc = gamepad.id;
+        const gamepadDesc = gamepad.id;
         if( gamepadDesc.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 05c4)') !== -1 ){
             return true;
         }else{
@@ -1497,10 +1497,10 @@ const isDualShock4_1stGen = ( gamepadIdx ) => {
 
 const isDualShock4_2ndGen = ( gamepadIdx ) => {
 
-    let gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
+    const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
     if( gamepad ){
 
-        let gamepadDesc = gamepad.id;
+        const gamepadDesc = gamepad.id;
         if( gamepadDesc.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 09cc)') !== -1 ){
             return true;
         }else{
