@@ -56,7 +56,7 @@ We have some modes to control cubes. Please see the chart below.
 |Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
 |---|---|---|
 |Exchange Cube1/2|OPTION/+ button|Light Cube1 in blue, Cube2 in green.|
-|Reset setting|PS/HOME button| - |
+|Reset setting|PS/HOME button|Substitute with START+SELECT button for USB gamepad|
 |Adjust speed|L1/R1, L/R button|Default value is 60.|
 
 ### Single Cube Control
