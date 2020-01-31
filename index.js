@@ -45,10 +45,6 @@ if ( window.GamepadEvent ) {
 let gPreviousHomeButtonStatus = [ undefined, undefined ];
 const handleHomeButton = () => {
 
-    const GAMEPAD_BT_HOME = 16;
-    const GAMEPAD_BT_8    = 8;
-    const GAMEPAD_BT_9    = 9;
-
     for( let item of gGamePadIndexArray ){
         const gamePad = navigator.getGamepads()[ item ];
         if( gamePad !== undefined ){
@@ -120,9 +116,7 @@ let gCubeControlModeStartTime = [ undefined, undefined ];
 const transitToDoubleCubeControlMode = ( idGamepad ) => {
 
     const gamePad = navigator.getGamepads()[ idGamepad ];
-    const GAMEPAD_BT_HOME = 16;
-    const GAMEPAD_BT_8 = 8;
-    const GAMEPAD_BT_9 = 9;
+
     let currentHomeButtonStatus;
     if( gamePad.buttons[ GAMEPAD_BT_HOME ] ){
         currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
@@ -239,29 +233,29 @@ const gInputStatus = [{
     rightTrigger:0.0,
 }];
 
+const GAMEPAD_LEFT_AXIS_X  = 0;
+const GAMEPAD_LEFT_AXIS_Y  = 1;
+const GAMEPAD_RIGHT_AXIS_X = 2;
+const GAMEPAD_RIGHT_AXIS_Y = 3;
+
+const GAMEPAD_BT_0      =  0; // CROSS button, B button 
+const GAMEPAD_BT_1      =  1; // CIRCLE button, A button
+const GAMEPAD_BT_2      =  2; // SQUARE button, Y button
+const GAMEPAD_BT_3      =  3; // TRIANGLE button, X button
+const GAMEPAD_BT_L1     =  4; // L1 button, L button
+const GAMEPAD_BT_R1     =  5; // R1 button, R button
+const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
+const GAMEPAD_BT_R2     =  7; // R2 trigger, ZR button 
+const GAMEPAD_BT_8      =  8; // Share button, - button
+const GAMEPAD_BT_9      =  9; // Option button, + button
+const GAMEPAD_BT_UP     = 12;
+const GAMEPAD_BT_DOWN   = 13;
+const GAMEPAD_BT_LEFT   = 14;
+const GAMEPAD_BT_RIGHT  = 15;
+const GAMEPAD_BT_HOME   = 16; // PS button / Home button
+
 // Register into InputStatus
 const registerInput = () => {
-
-    const GAMEPAD_LEFT_AXIS_X  = 0;
-    const GAMEPAD_LEFT_AXIS_Y  = 1;
-    const GAMEPAD_RIGHT_AXIS_X = 2;
-    const GAMEPAD_RIGHT_AXIS_Y = 3;
-
-    const GAMEPAD_BT_0      =  0; // CROSS button, B button 
-    const GAMEPAD_BT_1      =  1; // CIRCLE button, A button
-    const GAMEPAD_BT_2      =  2; // SQUARE button, Y button
-    const GAMEPAD_BT_3      =  3; // TRIANGLE button, X button
-    const GAMEPAD_BT_L1     =  4; // L1 button, L button
-    const GAMEPAD_BT_R1     =  5; // R1 button, R button
-    const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
-    const GAMEPAD_BT_R2     =  7; // R2 trigger, ZR button 
-    const GAMEPAD_BT_8      =  8; // Share button, - button
-    const GAMEPAD_BT_9      =  9; // Option button, + button
-    const GAMEPAD_BT_UP     = 12;
-    const GAMEPAD_BT_DOWN   = 13;
-    const GAMEPAD_BT_LEFT   = 14;
-    const GAMEPAD_BT_RIGHT  = 15;
-    const GAMEPAD_BT_HOME   = 16; // PS button / Home button
 
     for( let index of [ 0, 1 ] ){
 
@@ -441,7 +435,7 @@ const executeSingleCubeCommand = () => {
             // Single Normal control mode
             if( isValidAnalogValue( gISItem.xAxisRight ) ){
                 // rotation
-                opRotation( index );
+                opRotation( index, index, false );
                 // console.log( "rotation");
             }else{
                 if( isValidAnalogValue( gISItem.leftTrigger ) || isValidAnalogValue( gISItem.rightTrigger ) ){ 
@@ -473,7 +467,13 @@ const executeDoubleCubeCommand = () => {
         if( isValidAnalogValue( gISItem_0.xAxisLeft ) || isValidAnalogValue( gISItem_0.yAxisLeft ) ){ 
             if( gOperationModeIndexArray[ 0 ] === 0 ){
                 // Double combined control
-                opMove( 0, 0 );
+                if( ( gamepad.buttons[ GAMEPAD_BT_L2 ] && ( gamepad.buttons[ GAMEPAD_BT_L2 ].value === 1 ) ) 
+                        && ( ( gamepad.buttons[ GAMEPAD_BT_LEFT ] && ( gamepad.buttons[ GAMEPAD_BT_LEFT ].value === 1 ) ) )
+                            || ( gamepad.buttons[ GAMEPAD_BT_RIGHT ] && ( gamepad.buttons[ GAMEPAD_BT_RIGHT ].value === 1 ) ) ){
+                    opRotation( 0, 0, true );
+                }else{
+                    opMove( 0, 0 );
+                }
             }else{
                 // Double separated control
                 opMoveSeparated( 0, 0 );
@@ -488,7 +488,13 @@ const executeDoubleCubeCommand = () => {
             setMaxSpeed( 1, getMaxSpeed( 0 ) );
             if( gOperationModeIndexArray[ 0 ] === 0 ){
                 // Double combined control
-                opMove( 1, 1 );
+                if( ( gamepad.buttons[ GAMEPAD_BT_R2 ] && ( gamepad.buttons[ GAMEPAD_BT_R2 ].value === 1 ) ) 
+                        && ( ( gamepad.buttons[ GAMEPAD_BT_1 ] && ( gamepad.buttons[ GAMEPAD_BT_1 ].value === 1 ) ) )
+                            || ( gamepad.buttons[ GAMEPAD_BT_2 ] && ( gamepad.buttons[ GAMEPAD_BT_2 ].value === 1 ) ) ){
+                    opRotation( 1, 0, false );
+                }else{
+                    opMove( 1, 1 );
+                }
             }else{
                 // Double separated control
                 opMoveSeparated( 1, 1 );
@@ -564,10 +570,14 @@ const opSettings = () => {
 }
 
 // Operation for Rotation
-const opRotation = ( index ) => {
-    const gISItem = gInputStatus[ index ];
-    const unitSpeed = Math.round( gMaxSpeed[ index ] * 100 * gISItem.xAxisRight ) / 2;
-    setMotorSpeed( gCubes[ index ], unitSpeed, -1 * unitSpeed );
+const opRotation = ( cubeIndex, gamePadIndex, isLeftAnalogStick ) => {
+    const gISItem = gInputStatus[ gamePadIndex ];
+    let xAxisAnalogStick = gISItem.xAxisRight;
+    if( isLeftAnalogStick ){
+        xAxisAnalogStick = gISItem.xAxisLeft;
+    }
+    const unitSpeed = Math.round( gMaxSpeed[ gamePadIndex ] * 100 * xAxisAnalogStick ) / 2;
+    setMotorSpeed( gCubes[ cubeIndex ], unitSpeed, -1 * unitSpeed );
 }
 
 // Move operation for normal contorl mode
