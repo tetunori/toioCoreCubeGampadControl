@@ -45,10 +45,6 @@ if ( window.GamepadEvent ) {
 let gPreviousHomeButtonStatus = [ undefined, undefined ];
 const handleHomeButton = () => {
 
-    const GAMEPAD_BT_HOME = 16;
-    const GAMEPAD_BT_8    = 8;
-    const GAMEPAD_BT_9    = 9;
-
     for( let item of gGamePadIndexArray ){
         const gamePad = navigator.getGamepads()[ item ];
         if( gamePad !== undefined ){
@@ -120,9 +116,7 @@ let gCubeControlModeStartTime = [ undefined, undefined ];
 const transitToDoubleCubeControlMode = ( idGamepad ) => {
 
     const gamePad = navigator.getGamepads()[ idGamepad ];
-    const GAMEPAD_BT_HOME = 16;
-    const GAMEPAD_BT_8 = 8;
-    const GAMEPAD_BT_9 = 9;
+
     let currentHomeButtonStatus;
     if( gamePad.buttons[ GAMEPAD_BT_HOME ] ){
         currentHomeButtonStatus = gamePad.buttons[ GAMEPAD_BT_HOME ].value;
@@ -239,29 +233,29 @@ const gInputStatus = [{
     rightTrigger:0.0,
 }];
 
+const GAMEPAD_LEFT_AXIS_X  = 0;
+const GAMEPAD_LEFT_AXIS_Y  = 1;
+const GAMEPAD_RIGHT_AXIS_X = 2;
+const GAMEPAD_RIGHT_AXIS_Y = 3;
+
+const GAMEPAD_BT_0      =  0; // CROSS button, B button 
+const GAMEPAD_BT_1      =  1; // CIRCLE button, A button
+const GAMEPAD_BT_2      =  2; // SQUARE button, Y button
+const GAMEPAD_BT_3      =  3; // TRIANGLE button, X button
+const GAMEPAD_BT_L1     =  4; // L1 button, L button
+const GAMEPAD_BT_R1     =  5; // R1 button, R button
+const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
+const GAMEPAD_BT_R2     =  7; // R2 trigger, ZR button 
+const GAMEPAD_BT_8      =  8; // Share button, - button
+const GAMEPAD_BT_9      =  9; // Option button, + button
+const GAMEPAD_BT_UP     = 12;
+const GAMEPAD_BT_DOWN   = 13;
+const GAMEPAD_BT_LEFT   = 14;
+const GAMEPAD_BT_RIGHT  = 15;
+const GAMEPAD_BT_HOME   = 16; // PS button / Home button
+
 // Register into InputStatus
 const registerInput = () => {
-
-    const GAMEPAD_LEFT_AXIS_X  = 0;
-    const GAMEPAD_LEFT_AXIS_Y  = 1;
-    const GAMEPAD_RIGHT_AXIS_X = 2;
-    const GAMEPAD_RIGHT_AXIS_Y = 3;
-
-    const GAMEPAD_BT_0      =  0; // CROSS button, B button 
-    const GAMEPAD_BT_1      =  1; // CIRCLE button, A button
-    const GAMEPAD_BT_2      =  2; // SQUARE button, Y button
-    const GAMEPAD_BT_3      =  3; // TRIANGLE button, X button
-    const GAMEPAD_BT_L1     =  4; // L1 button, L button
-    const GAMEPAD_BT_R1     =  5; // R1 button, R button
-    const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
-    const GAMEPAD_BT_R2     =  7; // R2 trigger, ZR button 
-    const GAMEPAD_BT_8      =  8; // Share button, - button
-    const GAMEPAD_BT_9      =  9; // Option button, + button
-    const GAMEPAD_BT_UP     = 12;
-    const GAMEPAD_BT_DOWN   = 13;
-    const GAMEPAD_BT_LEFT   = 14;
-    const GAMEPAD_BT_RIGHT  = 15;
-    const GAMEPAD_BT_HOME   = 16; // PS button / Home button
 
     for( let index of [ 0, 1 ] ){
 
@@ -466,13 +460,6 @@ const executeDoubleCubeCommand = () => {
     const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ 0 ] ];
     const gISItem_0 = gInputStatus[ 0 ];
     const gISItem_1 = gInputStatus[ 1 ];
-
-    const GAMEPAD_BT_1      =  1; // CIRCLE button, A button
-    const GAMEPAD_BT_2      =  2; // SQUARE button, Y button
-    const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
-    const GAMEPAD_BT_R2     =  7; // R2 trigger, ZR button 
-    const GAMEPAD_BT_LEFT   = 14;
-    const GAMEPAD_BT_RIGHT  = 15;
 
     if( gamepad ){
 
