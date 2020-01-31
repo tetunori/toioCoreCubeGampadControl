@@ -441,7 +441,7 @@ const executeSingleCubeCommand = () => {
             // Single Normal control mode
             if( isValidAnalogValue( gISItem.xAxisRight ) ){
                 // rotation
-                opRotation( index );
+                opRotation( index, index, false );
                 // console.log( "rotation");
             }else{
                 if( isValidAnalogValue( gISItem.leftTrigger ) || isValidAnalogValue( gISItem.rightTrigger ) ){ 
@@ -467,13 +467,26 @@ const executeDoubleCubeCommand = () => {
     const gISItem_0 = gInputStatus[ 0 ];
     const gISItem_1 = gInputStatus[ 1 ];
 
+    const GAMEPAD_BT_1      =  1; // CIRCLE button, A button
+    const GAMEPAD_BT_2      =  2; // SQUARE button, Y button
+    const GAMEPAD_BT_L2     =  6; // L2 trigger, ZL button 
+    const GAMEPAD_BT_R2     =  7; // R2 trigger, ZR button 
+    const GAMEPAD_BT_LEFT   = 14;
+    const GAMEPAD_BT_RIGHT  = 15;
+
     if( gamepad ){
 
         // Cube 1 procedure
         if( isValidAnalogValue( gISItem_0.xAxisLeft ) || isValidAnalogValue( gISItem_0.yAxisLeft ) ){ 
             if( gOperationModeIndexArray[ 0 ] === 0 ){
                 // Double combined control
-                opMove( 0, 0 );
+                if( ( gamepad.buttons[ GAMEPAD_BT_L2 ] && ( gamepad.buttons[ GAMEPAD_BT_L2 ].value === 1 ) ) 
+                        && ( ( gamepad.buttons[ GAMEPAD_BT_LEFT ] && ( gamepad.buttons[ GAMEPAD_BT_LEFT ].value === 1 ) ) )
+                            || ( gamepad.buttons[ GAMEPAD_BT_RIGHT ] && ( gamepad.buttons[ GAMEPAD_BT_RIGHT ].value === 1 ) ) ){
+                    opRotation( 0, 0, true );
+                }else{
+                    opMove( 0, 0 );
+                }
             }else{
                 // Double separated control
                 opMoveSeparated( 0, 0 );
@@ -488,7 +501,13 @@ const executeDoubleCubeCommand = () => {
             setMaxSpeed( 1, getMaxSpeed( 0 ) );
             if( gOperationModeIndexArray[ 0 ] === 0 ){
                 // Double combined control
-                opMove( 1, 1 );
+                if( ( gamepad.buttons[ GAMEPAD_BT_R2 ] && ( gamepad.buttons[ GAMEPAD_BT_R2 ].value === 1 ) ) 
+                        && ( ( gamepad.buttons[ GAMEPAD_BT_1 ] && ( gamepad.buttons[ GAMEPAD_BT_1 ].value === 1 ) ) )
+                            || ( gamepad.buttons[ GAMEPAD_BT_2 ] && ( gamepad.buttons[ GAMEPAD_BT_2 ].value === 1 ) ) ){
+                    opRotation( 1, 0, false );
+                }else{
+                    opMove( 1, 1 );
+                }
             }else{
                 // Double separated control
                 opMoveSeparated( 1, 1 );
@@ -564,10 +583,14 @@ const opSettings = () => {
 }
 
 // Operation for Rotation
-const opRotation = ( index ) => {
-    const gISItem = gInputStatus[ index ];
-    const unitSpeed = Math.round( gMaxSpeed[ index ] * 100 * gISItem.xAxisRight ) / 2;
-    setMotorSpeed( gCubes[ index ], unitSpeed, -1 * unitSpeed );
+const opRotation = ( cubeIndex, gamePadIndex, isLeftAnalogStick ) => {
+    const gISItem = gInputStatus[ gamePadIndex ];
+    let xAxisAnalogStick = gISItem.xAxisRight;
+    if( isLeftAnalogStick ){
+        xAxisAnalogStick = gISItem.xAxisLeft;
+    }
+    const unitSpeed = Math.round( gMaxSpeed[ gamePadIndex ] * 100 * xAxisAnalogStick ) / 2;
+    setMotorSpeed( gCubes[ cubeIndex ], unitSpeed, -1 * unitSpeed );
 }
 
 // Move operation for normal contorl mode
