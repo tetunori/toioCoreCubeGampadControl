@@ -14,7 +14,7 @@ Now, WebBluetooth works on the limited browser/OS. Please check the support stat
 ## Preparation
 ### Hardware
 1. Turn the Cubes on.
-2. Prepare some gamepads as DUALSHOCK 4 or Joy-Con(L&R), then pair the gamepad and PC beforehand.<BR><img src="./images/gamepads.jpg" width="300px">
+2. Prepare some gamepads as DUALSHOCK 4 or Joy-Con(L&R), then pair the gamepad and PC beforehand. Also, supported some USB gamepads but function may partially limited.<BR><img src="./images/gamepads.jpg" width="300px">
 
 ### Software
 1. Open [this tool](https://tetunori.github.io/toioCoreCubeGampadControl/). Google Chrome is highly recommended.
@@ -29,7 +29,7 @@ We have some modes to control cubes. Please see the chart below.
   - Normal mode
     - <img src="./images/IMG_0716.JPG" width="400px">
     - Left analog stick: Move
-    - Right analog stick(X-Axis): Rotation
+    - Right analog stick(X-Axis): Rotation in place
   - Stick mode
     - Left analog stick(Y-Axis): Speed
     - Right analog stick(X-Axis): Direction
@@ -73,7 +73,7 @@ We have some modes to control cubes. Please see the chart below.
 |---|---|---|
 |Analog move|Left analog stick|<img src="./images/IMG_0716.JPG" width="300px">|
 |Go forward/backward|UP/DOWN button|top speed|
-|Turn|X-axis of right analog stick or LEFT/RIGHT button|Also CIRCLE/A, SQUARE/Y button used as top speed turn|
+|Turn|X-axis of right analog stick or LEFT/RIGHT button|Also CIRCLE/A, SQUARE/Y button used as top speed turn in place|
 Working demo movie(will update...)
 
 #### Stick mode
@@ -96,9 +96,11 @@ Working demo movie(will update...)
 |Cube1 Analog move|Left analog stick|<img src="./images/IMG_0719.JPG" width="300px">|
 |Cube1 forward/backward|UP/DOWN button|top speed|
 |Cube1 Turn|LEFT/RIGHT button|top speed turn|
+|Cube1 Turn in place|LEFT/RIGHT button with L2/ZL trigger|top speed turn in place|
 |Cube2 Analog move|Right analog stick|See the image above.|
 |Cube2 forward/backward|TRIANGLE/CROSS button|top speed|
 |Cube2 Turn|SQUARE/CIRCLE button|top speed turn|
+|Cube2 Turn in place|SQUARE/CIRCLE button with R2/ZR trigger|top speed turn in place|
 Working demo movie(will update...)
 
 #### Separated mode
