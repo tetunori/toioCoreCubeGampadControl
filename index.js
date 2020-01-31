@@ -468,8 +468,8 @@ const executeDoubleCubeCommand = () => {
             if( gOperationModeIndexArray[ 0 ] === 0 ){
                 // Double combined control
                 if( ( gamepad.buttons[ GAMEPAD_BT_L2 ] && ( gamepad.buttons[ GAMEPAD_BT_L2 ].value === 1 ) ) 
-                        && ( ( gamepad.buttons[ GAMEPAD_BT_LEFT ] && ( gamepad.buttons[ GAMEPAD_BT_LEFT ].value === 1 ) ) )
-                            || ( gamepad.buttons[ GAMEPAD_BT_RIGHT ] && ( gamepad.buttons[ GAMEPAD_BT_RIGHT ].value === 1 ) ) ){
+                        && ( ( gamepad.buttons[ GAMEPAD_BT_LEFT ] && ( gamepad.buttons[ GAMEPAD_BT_LEFT ].value === 1 ) )
+                            || ( gamepad.buttons[ GAMEPAD_BT_RIGHT ] && ( gamepad.buttons[ GAMEPAD_BT_RIGHT ].value === 1 ) ) ) ){
                     opRotation( 0, 0, true );
                 }else{
                     opMove( 0, 0 );
@@ -489,8 +489,8 @@ const executeDoubleCubeCommand = () => {
             if( gOperationModeIndexArray[ 0 ] === 0 ){
                 // Double combined control
                 if( ( gamepad.buttons[ GAMEPAD_BT_R2 ] && ( gamepad.buttons[ GAMEPAD_BT_R2 ].value === 1 ) ) 
-                        && ( ( gamepad.buttons[ GAMEPAD_BT_1 ] && ( gamepad.buttons[ GAMEPAD_BT_1 ].value === 1 ) ) )
-                            || ( gamepad.buttons[ GAMEPAD_BT_2 ] && ( gamepad.buttons[ GAMEPAD_BT_2 ].value === 1 ) ) ){
+                        && ( ( gamepad.buttons[ GAMEPAD_BT_1 ] && ( gamepad.buttons[ GAMEPAD_BT_1 ].value === 1 ) )
+                            || ( gamepad.buttons[ GAMEPAD_BT_2 ] && ( gamepad.buttons[ GAMEPAD_BT_2 ].value === 1 ) ) ) ){
                     opRotation( 1, 0, false );
                 }else{
                     opMove( 1, 1 );
