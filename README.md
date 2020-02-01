@@ -1,6 +1,7 @@
 # toio™Core Cube Gamepad Control
 Version 1.0.0  
 <img src="./images/screen_10.png" width="800px">
+[![movie](https://img.youtube.com/vi/Adt6j601e4E/0.jpg)](https://www.youtube.com/watch?v=Adt6j601e4E)
 
 # Description
 A Simple tool enables us to control toio™Core Cubes by a gamepad such as DUALSHOCK 4 or Joy-Con.  
@@ -74,14 +75,12 @@ We have some modes to control cubes. Please see the chart below.
 |Analog move|Left analog stick|<img src="./images/IMG_0716.JPG" width="300px">|
 |Go forward/backward|UP/DOWN button|top speed|
 |Turn|X-axis of right analog stick or LEFT/RIGHT button|Also CIRCLE/A, SQUARE/Y button used as top speed turn in place|
-Working demo movie(will update...)
 
 #### Stick mode
 |Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
 |---|---|---|
 |Speed control|Y-axis of left analog stick or left/right trigger|Also UP/DOWN button used as top speed|
 |Direction control|X-axis of right analog stick|Also CIRCLE/A, SQUARE/Y button used as max value|
-Working demo movie(will update...)
 
 ### Double Cube Control
 #### Common
@@ -101,7 +100,6 @@ Working demo movie(will update...)
 |Cube2 forward/backward|TRIANGLE/CROSS button|top speed|
 |Cube2 Turn|SQUARE/CIRCLE button|top speed turn|
 |Cube2 Turn in place|SQUARE/CIRCLE button with R2/ZR trigger|top speed turn in place|
-Working demo movie(will update...)
 
 #### Separated mode
 |Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
@@ -112,7 +110,6 @@ Working demo movie(will update...)
 |Cube2 Analog move|Right analog stick<BR>(rotate -90 deg.)|<img src="./images/IMG_0722.JPG" width="300px">|
 |Cube2 forward/backward|SQUARE/CIRCLE button|top speed|
 |Cube2 Turn|TRIANGLE/CROSS button|top speed turn|
-Working demo movie(will update...)
 
 # Licence
 This software is released under the MIT License, see LICENSE.
