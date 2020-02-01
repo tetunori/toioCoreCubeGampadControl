@@ -5,7 +5,7 @@ Version 1.0.0
 
 # Description
 A Simple tool enables us to control toio™Core Cubes by a gamepad such as DUALSHOCK 4 or Joy-Con.  
-See [this article(Under Construction)](https://qiita.com/tetunori_lego/items/37477c40b16f8eab384f) in detail. You can try [here](https://tetunori.github.io/toioCoreCubeGampadControl/).  
+See [this article](https://qiita.com/tetunori_lego/items/c0cf6999a7667756441f) in detail. You can try [here](https://tetunori.github.io/toioCoreCubeGampadControl/).  
 Now, WebBluetooth works on the limited browser/OS. Please check the support status on [Can I Use](https://caniuse.com/#feat=web-bluetooth).
 
 # Topology
