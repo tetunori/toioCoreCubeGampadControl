@@ -1459,6 +1459,8 @@ const getDescription = ( index ) => {
             description = 'DUALSHOCK 4(1st Gen)';
         }else if( isDualShock4_2ndGen( index ) ){
             description = 'DUALSHOCK 4(2nd Gen)';
+        }else if( isDualSense_1stGen( index ) ){
+            description = 'DualSense(1st Gen)';
         }else{
             description = gamepad.id;
         }
@@ -1517,6 +1519,24 @@ const isDualShock4_2ndGen = ( gamepadIdx ) => {
 
         const gamepadDesc = gamepad.id;
         if( gamepadDesc.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 09cc)') !== -1 ){
+            return true;
+        }else{
+            return false;
+        }
+
+    }else{
+        return false;
+    }
+
+}
+
+const isDualSense_1stGen = ( gamepadIdx ) => {
+
+    const gamepad = navigator.getGamepads()[ gCurrentGamePadIndices[ gamepadIdx ] ];
+    if( gamepad ){
+
+        const gamepadDesc = gamepad.id;
+        if( gamepadDesc.indexOf('Wireless Controller (STANDARD GAMEPAD Vendor: 054c Product: 0ce6)') !== -1 ){
             return true;
         }else{
             return false;

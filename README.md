@@ -1,10 +1,11 @@
 # toio™Core Cube Gamepad Control
-Version 1.0.0  
+Version 1.0.1  
+**Now, we support DualSense 1st Gen (2021/05/29).**  
 <img src="./images/screen_10.png" width="800px">
 [![movie](https://img.youtube.com/vi/Adt6j601e4E/0.jpg)](https://www.youtube.com/watch?v=Adt6j601e4E)
 
 # Description
-A Simple tool enables us to control toio™Core Cubes by a gamepad such as DUALSHOCK 4 or Joy-Con.  
+A Simple tool enables us to control toio™Core Cubes by a gamepad such as DUALSHOCK 4, DualSense or Joy-Con.  
 See [this article](https://qiita.com/tetunori_lego/items/c0cf6999a7667756441f) in detail. You can try [here](https://tetunori.github.io/toioCoreCubeGampadControl/).  
 Now, WebBluetooth works on the limited browser/OS. Please check the support status on [Can I Use](https://caniuse.com/#feat=web-bluetooth).
 
@@ -15,7 +16,7 @@ Now, WebBluetooth works on the limited browser/OS. Please check the support stat
 ## Preparation
 ### Hardware
 1. Turn the Cubes on.
-2. Prepare some gamepads as DUALSHOCK 4 or Joy-Con(L&R), then pair the gamepad and PC beforehand. Also, supported some USB gamepads but function may partially limited.<BR><img src="./images/gamepads.jpg" width="300px">
+2. Prepare some gamepads as DUALSHOCK 4, DualSense or Joy-Con(L&R), then pair the gamepad and PC beforehand. Also, supported some USB gamepads but function may partially limited.<BR><img src="./images/gamepads.jpg" width="300px">
 
 ### Software
 1. Open [this tool](https://tetunori.github.io/toioCoreCubeGampadControl/). Google Chrome is highly recommended.
@@ -54,7 +55,7 @@ We have some modes to control cubes. Please see the chart below.
 
 ## Operation
 ### Common
-|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|Category|Gamepad Op.<BR>DUALSHOCK 4/DualSense/Joy-Con|Screen/UI Example|
 |---|---|---|
 |Exchange Cube1/2|OPTION/+ button|Light Cube1 in blue, Cube2 in green.|
 |Reset setting|PS/HOME button|Substitute with START+SELECT button for USB gamepad|
@@ -62,7 +63,7 @@ We have some modes to control cubes. Please see the chart below.
 
 ### Single Cube Control
 #### Common
-|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|Category|Gamepad Op.<BR>DUALSHOCK 4/DualSense/Joy-Con|Screen/UI Example|
 |---|---|---|
 |Register gamepad|PS/Home button|If not registered|
 |Switch gamepad1/2|PS/Home button|If registered|
@@ -70,27 +71,27 @@ We have some modes to control cubes. Please see the chart below.
 |Transit to Double Cube Control|Long-press PS/Home button| - |
 
 #### Normal mode
-|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|Category|Gamepad Op.<BR>DUALSHOCK 4/DualSense/Joy-Con|Screen/UI Example|
 |---|---|---|
 |Analog move|Left analog stick|<img src="./images/IMG_0716.JPG" width="300px">|
 |Go forward/backward|UP/DOWN button|top speed|
 |Turn|X-axis of right analog stick or LEFT/RIGHT button|Also CIRCLE/A, SQUARE/Y button used as top speed turn in place|
 
 #### Stick mode
-|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|Category|Gamepad Op.<BR>DUALSHOCK 4/DualSense/Joy-Con|Screen/UI Example|
 |---|---|---|
 |Speed control|Y-axis of left analog stick or left/right trigger|Also UP/DOWN button used as top speed|
 |Direction control|X-axis of right analog stick|Also CIRCLE/A, SQUARE/Y button used as max value|
 
 ### Double Cube Control
 #### Common
-|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|Category|Gamepad Op.<BR>DUALSHOCK 4/DualSense/Joy-Con|Screen/UI Example|
 |---|---|---|
 |Switch op. mode|SHARE/- button|Toggle Combined<->Separated|
 |Transit to Single Cube Control|PS/Home button| - |
 
 #### Combined mode
-|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|Category|Gamepad Op.<BR>DUALSHOCK 4/DualSense/Joy-Con|Screen/UI Example|
 |---|---|---|
 |Cube1 Analog move|Left analog stick|<img src="./images/IMG_0719.JPG" width="300px">|
 |Cube1 forward/backward|UP/DOWN button|top speed|
@@ -102,7 +103,7 @@ We have some modes to control cubes. Please see the chart below.
 |Cube2 Turn in place|SQUARE/CIRCLE button with R2/ZR trigger|top speed turn in place|
 
 #### Separated mode
-|Category|Gamepad Op.<BR>DUALSHOCK 4/Joy-Con|Screen/UI Example|
+|Category|Gamepad Op.<BR>DUALSHOCK 4/DualSense/Joy-Con|Screen/UI Example|
 |---|---|---|
 |Cube1 Analog move|Left analog stick<BR>(rotate 90 deg.)|<img src="./images/IMG_0723.JPG" width="300px">|
 |Cube1 forward/backward|LEFT/RIGHT button|top speed|
